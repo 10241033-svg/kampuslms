@@ -38,6 +38,11 @@
                 Mata Kuliah
             </a>
 
+            <a href="{{ route('users.index') }}"
+               class="{{ request()->routeIs('users.*') ? 'active' : '' }}">
+                Pengguna
+            </a>
+
             {{-- Tombol tambah, hanya tampil jika route courses.create sudah didaftarkan --}}
             @if (Route::has('courses.create'))
                 <a href="{{ route('courses.create') }}">+ Tambah Mata Kuliah</a>
