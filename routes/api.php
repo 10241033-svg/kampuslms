@@ -18,7 +18,7 @@ Route::prefix('v1')->name('api.v1.')->middleware('throttle:60,1')->group(functio
     });
 
     Route::post('/auth/login', [AuthController::class, 'login'])
-        ->middleware('throttle:60,1')
+        ->middleware('throttle:5,1')
         ->name('login');
 
     // Authenticated Routes
