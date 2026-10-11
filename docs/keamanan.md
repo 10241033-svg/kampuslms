@@ -1,0 +1,35 @@
+## Titik rawan IDOR
+
+Semua endpoint pada tabel berada di bawah prefix `/api/v1` dan memerlukan
+autentikasi Sanctum. Policy atau query membatasi akses setelah record ditemukan:
+ID yang tidak ada menghasilkan `404`, sedangkan record yang ada tetapi tidak
+berhak diakses pemanggil ditolak (`403`).
+
+| Endpoint / target ID | Risiko IDOR | Policy atau query yang menutupnya |
+|---|---|---|
+| `GET /courses`, `GET /my/courses` | Memakai `scope=all` atau parameter lain untuk melihat course di luar cakupan pengguna | `CoursePolicy::viewAny`; `CourseApiController::index` tetap membatasi query ke semua course untuk admin, `taughtCourses()` untuk dosen, dan `courses()->where('courses.status', 'active')` untuk mahasiswa. |
+| `GET /courses/{course}` | Mengganti ID untuk melihat course yang tidak diampu atau tidak diikuti | `CoursePolicy::view` mengizinkan admin, dosen dengan `lecturer_id` sendiri, atau mahasiswa yang terdaftar pada course aktif (`students()->whereKey($user->id)->exists()`). |
+| `POST /courses`, `PUT /courses/{course}`, `DELETE /courses/{course}` | Membuat, mengubah, atau menghapus course dengan ID/data yang tidak berhak dikelola | Route admin-only dan `CoursePolicy::create/update/delete`; penghapusan juga mensyaratkan tidak ada mahasiswa, materi, maupun tugas terkait (`students()`, `materials()`, `assignments()->exists()`). |
+| `GET /courses/{course}/materials` | Mengganti ID course untuk membaca daftar materi course lain | `MaterialPolicy::viewAny` memeriksa course induk; query daftar memakai `$course->materials()`. |
+| `GET /materials/{material}`, `GET /materials/{material}/download` | Membaca metadata atau mengunduh materi milik course yang tidak berhak diakses | `MaterialPolicy::view` memeriksa course induk; mahasiswa harus terdaftar pada course aktif. |
+| `POST /courses/{course}/materials` | Mengunggah materi ke course yang tidak diampu | `StoreMaterialRequest::authorize` memanggil `MaterialPolicy::create` terhadap course hasil route binding; hanya admin atau dosen pengampu. |
+| `PUT /materials/{material}`, `DELETE /materials/{material}` | Mengubah atau menghapus materi course lain | `UpdateMaterialRequest::authorize` dan `MaterialPolicy::delete` memanggil Policy terhadap materi dan course induknya; hanya admin atau dosen pengampu. |
+| `GET /courses/{course}/assignments` | Mengganti ID course atau meminta tugas draft sebagai mahasiswa | `AssignmentPolicy::viewAny` memeriksa course induk; query memakai `$course->assignments()` dan mahasiswa selalu difilter ke `status = published`. |
+| `GET /assignments/{assignment}` | Mengganti ID tugas, termasuk untuk membaca draft | `AssignmentPolicy::view`; mahasiswa hanya dapat melihat tugas `published` dari course `active` yang diikutinya. |
+| `POST /assignments` | Memalsukan `course_id` untuk membuat tugas di course dosen lain | `StoreAssignmentRequest` membatasi peran melalui `AssignmentPolicy::createAny`; controller mencari course berdasarkan ID lalu memanggil `AssignmentPolicy::create` pada course tersebut. |
+| `PUT/PATCH /assignments/{assignment}`, `DELETE /assignments/{assignment}` | Mengubah atau menghapus tugas milik course lain | `UpdateAssignmentRequest::authorize` dan `AssignmentPolicy::update/delete` memeriksa pengampu course; penghapusan ditolak jika tugas sudah memiliki nilai (`grades()->exists()`). |
+| `GET /assignments/{assignment}/submissions` | Mengganti ID tugas untuk melihat jawaban dari course lain | `SubmissionPolicy::viewAny` memerlukan admin atau dosen pengampu; daftar diambil dari `$assignment->submissions()`. |
+| `POST /assignments/{assignment}/submissions` | Mengirim jawaban ke tugas orang lain, tugas draft, course yang tidak diikuti, atau mengirim ulang | `StoreSubmissionRequest::authorize` memanggil `SubmissionPolicy::create`; Policy memeriksa peran mahasiswa, status tugas/course, enrollment (`students()->whereKey(...)->exists()`), dan belum adanya submission milik mahasiswa tersebut. |
+| `GET /my/submissions` | Membaca submission pengguna lain melalui endpoint daftar | `SubmissionPolicy::viewAny` membatasi endpoint ke mahasiswa; query hanya melalui `$request->user()->submissions()`. |
+| `GET /submissions/{submission}`, `GET /submissions/{submission}/download` | Mengganti ID untuk membaca atau mengunduh jawaban mahasiswa lain | `SubmissionPolicy::view` hanya mengizinkan admin, dosen pengampu course, atau pemilik submission (`submission->user_id === user->id`). |
+| `PUT /submissions/{submission}` | Mengubah submission dengan menebak ID milik pengguna lain | `SubmissionPolicy::update` selalu menolak; endpoint revisi memang tidak diizinkan. |
+| `PUT /submissions/{submission}/grade` | Memberi atau mengubah nilai submission dari course lain | `GradePolicy::create/update` mengharuskan dosen pengampu course terkait submission. |
+| `GET /grades/{grade}`, `GET /submissions/{submission}/grade` | Membaca nilai mahasiswa lain atau nilai yang belum diumumkan | `GradePolicy::view`; mahasiswa hanya dapat membaca nilai submission sendiri setelah `published_at` terisi. Endpoint nilai submission memeriksa Policy pada grade yang terhubung. |
+| `POST /grades/{grade}/publish` | Mempublikasikan nilai pada course lain | `GradePolicy::publish` hanya mengizinkan dosen pengampu course dari submission terkait. |
+| `GET /courses/{course}/students`, `GET /courses/{course}/enrollments/candidates` | Mengganti ID course untuk melihat roster atau kandidat enrollment course lain | `CoursePolicy::manageEnrollment` hanya mengizinkan admin atau dosen pengampu; roster diambil melalui `$course->students()`, kandidat memakai `whereDoesntHave('courses', ...)`. |
+| `POST /courses/{course}/enrollments`, `DELETE /courses/{course}/enrollments/{user}` | Mendaftarkan atau mengeluarkan mahasiswa dari course lain atau menargetkan akun non-mahasiswa | `CoursePolicy::manageEnrollment`; pendaftaran memvalidasi `user_id` ber-role mahasiswa, dan penghapusan memastikan target memiliki role mahasiswa sebelum detach dari course itu. |
+| `GET /users/{user}` | Mengganti ID untuk membaca profil akun lain | `UserPolicy::view` hanya mengizinkan admin atau pemilik akun. |
+| `PUT /users/{user}`, `PATCH /me` | Mengubah profil orang lain atau menaikkan role sendiri | `UserPolicy::update` mengizinkan admin atau pemilik; pemilik tidak boleh mengirim `role`. `PATCH /me` juga melarang perubahan `email` dan `nim_nip` melalui validasi. |
+| `GET /users`, `GET /lecturers`, `POST /users` | Mengakses daftar akun atau membuat akun tanpa hak admin | Middleware `role:admin` dan `UserPolicy::viewAny/create` membatasi operasi ini ke admin. |
+| `DELETE /users/{user}` | Menghapus akun sendiri atau menghapus dosen yang masih mengampu course | Middleware `role:admin` dan `UserPolicy::delete`; akun sendiri ditolak dan dosen hanya dapat dihapus jika `taughtCourses()->exists()` bernilai `false`. |
+| `GET /notifications`, `POST /notifications/{notification}/read` | Membaca atau menandai notifikasi milik pengguna lain dengan mengganti ID | Query daftar memakai `$request->user()->notifications()`; pencarian ID untuk ditandai dibaca juga melalui relasi notifikasi pengguna tersebut (`whereKey($id)->firstOrFail()`). |
