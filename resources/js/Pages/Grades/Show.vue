@@ -15,7 +15,7 @@ const page = usePageData('grade');
         </section>
         <template v-else-if="page.data.value && page.user.value?.role === 'dosen'">
             <section class="panel"><p>{{ page.data.value.student?.name ?? 'Mahasiswa' }} · {{ page.data.value.assignment?.title }}</p><button class="button button-quiet" @click="page.download(`/submissions/${page.data.value.id}/download`, page.data.value.original_name)">Unduh {{ page.data.value.original_name }}</button></section>
-            <ResourceForm :fields="page.fields.value" :model="page.form" :busy="page.loading.value" :cancel-to="`/submissions/${page.data.value.id}`" submit-label="Simpan nilai" @submit="page.submit" />
+            <ResourceForm :fields="page.fields.value" :model="page.form" :field-errors="page.fieldErrors" :busy="page.loading.value" :cancel-to="`/submissions/${page.data.value.id}`" submit-label="Simpan nilai" @submit="page.submit" />
         </template>
     </PageFrame>
 </template>

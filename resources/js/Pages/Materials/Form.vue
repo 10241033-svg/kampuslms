@@ -11,7 +11,7 @@ const cancelTo = computed(() => page.mode.value === 'edit' ? `/materials/${page.
 
 <template>
     <PageFrame :title="title" :subtitle="page.data.value?.course?.name ?? page.data.value?.course?.code" :loading="page.loading.value" :error="page.error.value">
-        <ResourceForm :fields="page.fields.value" :model="page.form" :busy="page.loading.value" :cancel-to="cancelTo" submit-label="Simpan materi" show-material-fields @submit="page.submit" />
+        <ResourceForm :fields="page.fields.value" :model="page.form" :field-errors="page.fieldErrors" :busy="page.loading.value" :cancel-to="cancelTo" submit-label="Simpan materi" show-material-fields @submit="page.submit" />
         <p class="hint">Isi metadata berkas secara manual; berkas tidak diunggah.</p>
     </PageFrame>
 </template>

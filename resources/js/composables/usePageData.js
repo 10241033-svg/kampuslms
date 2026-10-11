@@ -12,6 +12,7 @@ export function usePageData(page) {
     const candidates = ref([]);
     const loading = ref(false);
     const error = ref('');
+    const fieldErrors = reactive({});
     const search = ref('');
     const status = ref('');
     const role = ref('');
@@ -129,8 +130,8 @@ export function usePageData(page) {
                     data.value.materials = array(await api.get(`/courses/${id}/materials`));
                     if (user.value.role === 'admin') {
                         const [students, enrolled] = await Promise.all([
-                            api.get(`/courses/${id}/students`),
-                            api.get(`/courses/${id}/enrollments/candidates`),
+                            api.get(`/admin/courses/${id}/students`),
+                            api.get(`/admin/courses/${id}/enrollments/candidates`),
                         ]);
                         data.value.students = array(students);
                         candidates.value = enrolled.data.data.candidates;
@@ -149,7 +150,7 @@ export function usePageData(page) {
                     pagination.value = response.data.meta;
                     break;
                 case 'course-form':
-                    lecturers.value = array(await api.get('/lecturers'));
+                    lecturers.value = array(await api.get('/admin/lecturers'));
                     if (mode.value === 'edit') data.value = (await api.get(`/courses/${id}`)).data.data;
                     clearForm();
                     if (data.value) Object.assign(form, data.value);
@@ -186,7 +187,7 @@ export function usePageData(page) {
                     if (mode.value === 'edit') Object.assign(form, data.value);
                     break;
                 case 'users':
-                    response = await api.get('/users', { params: { search: search.value || undefined, role: role.value || undefined, page: currentPage.value } });
+                    response = await api.get('/admin/users', { params: { search: search.value || undefined, role: role.value || undefined, page: currentPage.value } });
                     rows.value = array(response);
                     pagination.value = response.data.meta;
                     break;
@@ -225,8 +226,8 @@ export function usePageData(page) {
                 case 'enrollment-form': {
                     data.value = (await api.get(`/courses/${id}`)).data.data;
                     const [students, candidatesResponse] = await Promise.all([
-                        api.get(`/courses/${id}/students`, { params: { page: currentPage.value } }),
-                        api.get(`/courses/${id}/enrollments/candidates`),
+                        api.get(`/admin/courses/${id}/students`, { params: { page: currentPage.value } }),
+                        api.get(`/admin/courses/${id}/enrollments/candidates`),
                     ]);
                     data.value.students = array(students);
                     pagination.value = students.data.meta;
@@ -252,15 +253,17 @@ export function usePageData(page) {
 
     async function submit() {
         error.value = '';
+        // Bersihkan error per-field sebelum submit
+        for (const key of Object.keys(fieldErrors)) delete fieldErrors[key];
         try {
             const id = route.params.id;
             if (page === 'grade' && user.value.role === 'dosen') {
-                await api.put(`/submissions/${data.value.id}/grade`, form);
+                await api.put(`/lecturer/submissions/${data.value.id}/grade`, form);
                 await router.push(`/submissions/${data.value.id}`);
                 return;
             }
             if (page === 'enrollment-form') {
-                await api.post(`/courses/${id}/enrollments`, form);
+                await api.post(`/admin/courses/${id}/enrollments`, form);
                 await router.push(`/courses/${id}/enrollments`);
                 return;
             }
@@ -276,10 +279,19 @@ export function usePageData(page) {
             const editing = mode.value === 'edit';
             const payload = Object.fromEntries(fields.value.map(({ name }) => [name, form[name]]));
             const resource = {
-                'course-form': { url: editing ? `/courses/${id}` : '/courses', back: editing ? `/courses/${id}` : '/courses' },
-                'assignment-form': { url: editing ? `/assignments/${id}` : '/assignments', back: editing ? `/courses/${data.value.course_id}/assignments` : `/courses/${id}` },
-                'material-form': { url: editing ? `/materials/${id}` : `/courses/${id}/materials`, back: editing ? `/courses/${data.value.course_id}/materials` : `/courses/${id}/materials` },
-                'user-form': { url: editing ? `/users/${id}` : '/users', back: editing ? `/users/${id}` : '/users' },
+                'course-form': {
+                    url: editing ? `/admin/courses/${id}` : '/admin/courses',
+                    back: editing ? `/courses/${id}` : '/courses',
+                },
+                'assignment-form': {
+                    url: editing ? `/lecturer/assignments/${id}` : '/lecturer/assignments',
+                    back: editing ? `/courses/${data.value.course_id}/assignments` : `/courses/${id}`,
+                },
+                'material-form': {
+                    url: editing ? `/lecturer/materials/${id}` : `/lecturer/courses/${id}/materials`,
+                    back: editing ? `/courses/${data.value.course_id}/materials` : `/courses/${id}/materials`,
+                },
+                'user-form': { url: editing ? `/users/${id}` : '/admin/users', back: editing ? `/users/${id}` : '/users' },
             }[page];
             if (page === 'assignment-form' && !editing) payload.course_id = id;
             if (page === 'material-form') {
@@ -292,6 +304,13 @@ export function usePageData(page) {
             }
             await router.push(resource.back);
         } catch (requestError) {
+            // Tangani error validasi 422: isi fieldErrors per field
+            const responseErrors = requestError.response?.data?.errors;
+            if (requestError.response?.status === 422 && responseErrors) {
+                Object.assign(fieldErrors, Object.fromEntries(
+                    Object.entries(responseErrors).map(([key, messages]) => [key, messages[0]]),
+                ));
+            }
             error.value = getErrorMessage(requestError);
         }
     }
@@ -309,8 +328,15 @@ export function usePageData(page) {
 
     async function remove(kind, item) {
         if (!window.confirm(`Hapus ${kind} ini?`)) return;
+        // Peta kind ke prefix URL yang sesuai dengan role group di api.php
+        const deleteUrlMap = {
+            courses: `/admin/courses/${item.id}`,
+            users: `/admin/users/${item.id}`,
+            assignments: `/lecturer/assignments/${item.id}`,
+            materials: `/lecturer/materials/${item.id}`,
+        };
         try {
-            await api.delete(`/${kind}/${item.id}`);
+            await api.delete(deleteUrlMap[kind] ?? `/${kind}/${item.id}`);
             if (kind === 'courses') return router.push('/courses');
             if (kind === 'users' && page === 'user') return router.push('/users');
             if (kind === 'assignments') return router.push(`/courses/${item.course_id ?? data.value.course_id ?? data.value.id}/assignments`);
@@ -323,7 +349,7 @@ export function usePageData(page) {
 
     async function enroll(userId) {
         try {
-            await api.post(`/courses/${route.params.id}/enrollments`, { user_id: userId });
+            await api.post(`/admin/courses/${route.params.id}/enrollments`, { user_id: userId });
             await load();
         } catch (requestError) {
             error.value = getErrorMessage(requestError);
@@ -332,7 +358,7 @@ export function usePageData(page) {
 
     async function removeStudent(student) {
         try {
-            await api.delete(`/courses/${route.params.id}/enrollments/${student.id}`);
+            await api.delete(`/admin/courses/${route.params.id}/enrollments/${student.id}`);
             await load();
         } catch (requestError) {
             error.value = getErrorMessage(requestError);
@@ -403,7 +429,7 @@ export function usePageData(page) {
     onMounted(load);
 
     return {
-        user, data, rows, lecturers, candidates, loading, error, search, status, role,
+        user, data, rows, lecturers, candidates, loading, error, fieldErrors, search, status, role,
         currentPage, pagination, form, fields, mode, router, load, submit, login,
         remove, enroll, removeStudent, readNotification, readAllNotifications,
         download, submitAssignment, goToPage, setFile,

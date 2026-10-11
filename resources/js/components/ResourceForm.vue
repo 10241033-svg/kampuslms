@@ -4,6 +4,7 @@ import { RouterLink } from 'vue-router';
 defineProps({
     fields: { type: Array, required: true },
     model: { type: Object, required: true },
+    fieldErrors: { type: Object, default: () => ({}) },
     submitLabel: { type: String, default: 'Simpan' },
     cancelTo: { type: String, default: '/dashboard' },
     busy: { type: Boolean, default: false },
@@ -20,11 +21,11 @@ defineEmits(['submit', 'file-change']);
             v-show="!showMaterialFields || (field.name === 'external_url' ? model.type === 'link' : ['original_name', 'file_size', 'mime_type'].includes(field.name) ? model.type === 'file' : true)"
             :key="field.name"
             class="field"
-            :class="{ 'span-all': field.type === 'textarea' }"
+            :class="{ 'span-all': field.type === 'textarea', 'has-error': fieldErrors[field.name] }"
         >
             <label v-if="field.type !== 'checkbox'" :for="field.name">{{ field.label }}</label>
-            <textarea v-if="field.type === 'textarea'" :id="field.name" v-model="model[field.name]" :required="field.required" />
-            <select v-else-if="field.type === 'select'" :id="field.name" v-model="model[field.name]" :required="field.required">
+            <textarea v-if="field.type === 'textarea'" :id="field.name" v-model="model[field.name]" :required="field.required" :class="{ 'input-error': fieldErrors[field.name] }" />
+            <select v-else-if="field.type === 'select'" :id="field.name" v-model="model[field.name]" :required="field.required" :class="{ 'input-error': fieldErrors[field.name] }">
                 <option value="">Pilih {{ field.label.toLowerCase() }}</option>
                 <option v-for="option in field.options" :key="option.value" :value="option.value">{{ option.text }}</option>
             </select>
@@ -45,7 +46,10 @@ defineEmits(['submit', 'file-change']);
                 :max="field.max"
                 :step="field.step"
                 :required="field.required || (showMaterialFields && model.type === 'link' && field.name === 'external_url') || (showMaterialFields && model.type === 'file' && ['original_name', 'file_size'].includes(field.name))"
+                :class="{ 'input-error': fieldErrors[field.name] }"
             >
+            <!-- Pesan error per field dari respons 422 Laravel -->
+            <span v-if="fieldErrors[field.name]" class="field-error-msg" role="alert">{{ fieldErrors[field.name] }}</span>
         </div>
         <div class="span-all actions">
             <button class="button" :disabled="busy">{{ submitLabel }}</button>
@@ -65,4 +69,8 @@ textarea { min-height:100px; }
 .check { display:flex; gap:10px; align-items:center; }
 .check input { width:auto; }
 @media(max-width:680px) { .form-grid { grid-template-columns:1fr; } }
+/* Error per field */
+.input-error { border-color:#ae3549 !important; background:#fff8f8; }
+.field-error-msg { color:#ae3549; font-size:.82rem; font-weight:500; }
+.has-error label { color:#ae3549; }
 </style>
