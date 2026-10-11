@@ -31,6 +31,7 @@ class DatabaseSeeder extends Seeder
             'status' => 'active',
             'lecturer_id' => fn () => $allDosens->random()->id,
         ]);
+        $courses->first()->update(['lecturer_id' => $demoDosen->id]);
 
         // 4. Enroll Mahasiswa (Tiap MK minimal 15 Mahasiswa)
         foreach ($courses as $course) {
@@ -97,7 +98,7 @@ class DatabaseSeeder extends Seeder
         }
 
         // 7. Penilaian Submissions (>= 100 submission, ~60% dinilai)
-        $submissions = Submission::all();
+        $submissions = Submission::with('assignment.course')->get();
         $targetGradedCount = (int) ($submissions->count() * 0.6);
 
         $submissionsToGrade = $submissions->random(min($targetGradedCount, $submissions->count()));

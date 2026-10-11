@@ -1,146 +1,164 @@
-# Nama Proyek : LMS Team 4
-## Daftar Anggota
+# 🎓 LMS Team 4 - KampusLMS
+
+Platform Learning Management System (LMS) berbasis **Laravel API** dan **Vue 3 SPA (Single Page Application)**. Memanfaatkan **Vue Router** untuk rute frontend dan **Axios** untuk interaksi REST API.
+
+---
+
+## 👥 Daftar Anggota Kelompok
 - [Feniria (10241031)](https://github.com/fenii22)
 - [Fitriyansyah Wicaksonoaji (10241033)](https://github.com/10241033-svg)
 - [Hamzah Wiranata (10241035)](https://github.com/wiranata-orion)
 - [Jeshua Austin Daceka (10241037)](https://github.com/10241037-cloud)
-## Cara Instalasi Repository Github
-- VSCode login pake akun github
-- Bikin Folder Kosong, lalu buka terminal
-    ```shell
-    git clone https://github.com/wiranata-orion/kampuslms-kelompok-04
-    ```
-- Cek Update dari Repository (Sebelum upload jalanin ini dulu)
-    ```shell
-    git pull origin main
-    ```
-- Upload file ke repository
-    ```shell
-    git add .
-    git commit -m "komentar"
-    git push origin main
-    ```
-## Cara Instalasi Laravel
-
-### Prasyarat (Prerequisites)
-
-Untuk mempermudah setup environment, kita menggunakan **[Laravel Herd](https://herd.laravel.com/)** (tersedia untuk Windows & macOS).
-
-Software yang perlu diinstal:
-- **[Laravel Herd](https://herd.laravel.com/)** (Otomatis menyertakan **PHP 8.2+** dan **Composer**, jadi tidak perlu install manual)
-- **[Node.js](https://nodejs.org/) & NPM** (Bisa diaktifkan via menu *Node.js* di pengaturan Laravel Herd atau unduh versi LTS)
-- **[Git](https://git-scm.com/)**
-- Database: **SQLite** (default Laravel 12, langsung siap pakai tanpa perlu instalasi database terpisah) atau **MySQL** (opsional via XAMPP / Laragon)
 
 ---
 
-### Cara Instalasi & Menjalankan Project Laravel
+## 💻 Cara Penggunaan Git & Repository
 
-Setelah melakukan clone repository, ikuti langkah-langkah berikut untuk menginstal dan menjalankan proyek `lms-team-4`:
-
-### 1. Masuk ke Direktori Project
-Buka terminal dan masuk ke folder project Laravel:
+### 1. Initial Clone
+Buka terminal/PowerShell di folder directory, lalu jalankan:
 ```shell
-cd lms-team-4
+git clone https://github.com/wiranata-orion/kampuslms-kelompok-04
+cd kampuslms-kelompok-04
 ```
 
-### 2. Install Dependensi PHP (Composer)
-Jalankan perintah berikut untuk mengunduh semua package backend:
+### 2. Workflow Sebelum Push Kode Baru
+Selalu pastikan kode di lokal sudah sinkron dengan repository utama sebelum mengunggah perubahan:
+```shell
+# Ambil pembaruan terbaru dari branch aktif
+git pull origin main
+
+# Tambahkan perubahan, commit, dan push
+git add .
+git commit -m "deskripsi perubahan fitur"
+git push origin main
+```
+
+---
+
+## ⚙️ Cara Instalasi & Menjalankan Proyek
+
+### Prasyarat (Prerequisites)
+
+Untuk mempermudah setup environment, disarankan menggunakan **[Laravel Herd](https://herd.laravel.com/)** (Windows & macOS).
+
+Requirements :
+- **PHP 8.4+** & **Composer** (Otomatis disertakan jika menggunakan Laravel Herd)
+- **[Node.js](https://nodejs.org/) (LTS)** & **NPM**
+- **[Git](https://git-scm.com/)**
+- **Database Engine**: **SQLite** (siap pakai) atau **MySQL** (via XAMPP / Laragon)
+
+---
+
+### Langkah-Langkah Instalasi Lokal
+
+#### 1. Masuk ke Folder Proyek
+```shell
+cd kampuslms-kelompok-04
+```
+
+#### 2. Install Dependensi Backend (Composer)
+Unduh seluruh package PHP dan framework Laravel:
 ```shell
 composer install
 ```
 
-### 3. Install Dependensi Frontend (NPM)
-Jalankan perintah berikut untuk mengunduh package frontend (Tailwind CSS, Vite, dll):
+Jika sebelumnya gagal
 ```shell
-npm install
+composer install --ignore-platform-reqs
 ```
 
-### 4. Buat File Environment (`.env`)
+#### 3. Install Dependensi Frontend (NPM)
+Unduh Vue 3, Vue Router, Axios, Vite, dan Tailwind CSS:
+
+```shell
+npm run dev
+```
+
+Jika sebelumnya gagal
+```shell
+npm install --legacy-peer-deps
+```
+
+#### 4. Buat File Environment (`.env`)
 Salin file template `.env.example` menjadi `.env`:
+- **Windows (PowerShell) / Git Bash / Mac / Linux:**
+  ```shell
+  cp .env.example .env
+  ```
 - **Windows (CMD):**
   ```cmd
   copy .env.example .env
   ```
-- **Windows (PowerShell) / Git Bash / Linux / Mac:**
-  ```shell
-  cp .env.example .env
-  ```
 
-### 5. Generate Application Key
-Jalankan perintah berikut untuk membuat security key aplikasi:
+#### 5. Generate Application Key
 ```shell
 php artisan key:generate
 ```
 
-### 6. Konfigurasi Database & Migrasi
+#### 6. Konfigurasi Database & Migrasi
 
-#### Pilihan A: Menggunakan SQLite (Default & Paling Praktis)
-1. Buka file `.env` dan pastikan konfigurasi database:
+##### Pilihan A: Menggunakan SQLite (Rekomendasi & Praktis)
+1. Buka file `.env` dan pastikan baris berikut terkonfigurasi:
    ```env
    DB_CONNECTION=sqlite
    ```
-2. Jalankan migrasi database (Laravel akan otomatis menawarkan membuat file `database.sqlite` jika belum ada):
+2. Jalankan migrasi dan seeder awal (Laravel akan otomatis membuat file `database/database.sqlite` jika belum ada):
    ```shell
-   php artisan migrate
+   php artisan migrate --seed
    ```
 
-#### Pilihan B: Menggunakan MySQL (XAMPP / Laragon)
-1. Nyalakan service **Apache** & **MySQL** di XAMPP/Laragon.
-2. Buat database baru di `phpMyAdmin` (misalnya bernama `lms_team4`).
-3. Sesuaikan konfigurasi di file `.env`:
+##### Pilihan B: Menggunakan MySQL (XAMPP / Laragon)
+1. Nyalakan service **MySQL** di XAMPP/Laragon.
+2. Buat database baru di `phpMyAdmin` (misalnya bernama `kampuslms`).
+3. Sesuaikan file `.env`:
    ```env
    DB_CONNECTION=mysql
    DB_HOST=127.0.0.1
    DB_PORT=3306
-   DB_DATABASE=lms_team4
+   DB_DATABASE=kampuslms
    DB_USERNAME=root
    DB_PASSWORD=
    ```
-4. Jalankan migrasi:
+4. Jalankan migrasi dan seeder awal:
    ```shell
-   php artisan migrate
+   php artisan migrate --seed
    ```
-
-*(Opsional)* Jika ada dummy data atau seeder yang perlu dimasukkan:
-```shell
-php artisan migrate --seed
-```
 
 ---
 
-### 7. Menjalankan Server Development
+### 🚀 Menjalankan Server Development
 
-#### Opsi 1: Menggunakan Laravel Herd (Rekomendasi)
-Jika folder project sudah berada di folder yang di-*Park* atau di-*Link* oleh Laravel Herd:
-- Cukup jalankan asset compiler di terminal:
+#### Opsi 1: Menggunakan 2 Terminal (Standar SPA)
+Buka 2 jendela terminal secara bersamaan:
+
+- **Terminal 1 (Backend API Laravel):**
+  ```shell
+  php artisan serve
+  ```
+- **Terminal 2 (Frontend Vite Compiler):**
   ```shell
   npm run dev
   ```
-- Aplikasi otomatis dapat langsung diakses di browser melalui URL: **`http://lms-team-4.test`**
+
+Akses aplikasi di browser melalui URL: **`http://127.0.0.1:8000`**
 
 #### Opsi 2: Menggunakan Composer Run Dev (All-in-One CLI)
 ```shell
 composer run dev
 ```
-*(Perintah ini akan menjalankan server backend, Vite frontend, queue, dan logger secara bersamaan).*
-
-#### Opsi 3: Jalankan Terpisah di 2 Terminal
-- **Terminal 1 (Backend Laravel):**
-  ```shell
-  php artisan serve
-  ```
-- **Terminal 2 (Frontend Vite):**
-  ```shell
-  npm run dev
-  ```
-
-Akses aplikasi di browser pada: **`http://localhost:8000`** atau **`http://127.0.0.1:8000`**
+*(Perintah ini akan mengeksekusi server backend dan Vite compiler sekaligus dalam satu terminal).*
 
 ---
 
-## Pembagian Peran
-- Fitriyansyah Wicaksonoaji : 
-- Feniria : 
-- Hamzah Wiranata : 
-- Jeshua Austin Daceka :
+## 🛠️ Arsitektur & Fitur Utama
+
+- **Backend**: Laravel REST API Controller, Controller laravel yang mengirimkan respon data dalam bentuk format JSON ke frontend
+- **Frontend**: Vue, Vue Router, Axios
+
+---
+
+## 📌 Pembagian Peran
+- **Feniria**: 
+- **Fitriyansyah Wicaksonoaji**: 
+- **Hamzah Wiranata**: 
+- **Jeshua Austin Daceka**:

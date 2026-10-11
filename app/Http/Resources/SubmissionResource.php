@@ -19,7 +19,13 @@ class SubmissionResource extends JsonResource
             'submitted_at' => $this->submitted_at?->toIso8601String(),
             'is_late' => $this->is_late,
             'student' => $this->whenLoaded('student', fn () => new PublicUserResource($this->student)),
+            'assignment' => $this->whenLoaded('assignment', fn () => new AssignmentResource($this->assignment)),
             'grade' => $this->whenLoaded('grade', fn () => new GradeResource($this->grade)),
+            'permissions' => $this->when($request->routeIs('api.v1.submissions.show'), fn () => [
+                'view' => $request->user()?->can('view', $this->resource) ?? false,
+                'update' => $request->user()?->can('update', $this->resource) ?? false,
+                'delete' => $request->user()?->can('delete', $this->resource) ?? false,
+            ]),
         ];
     }
 }
