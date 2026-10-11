@@ -130,8 +130,8 @@ export function usePageData(page) {
                     data.value.materials = array(await api.get(`/courses/${id}/materials`));
                     if (user.value.role === 'admin') {
                         const [students, enrolled] = await Promise.all([
-                            api.get(`/admin/courses/${id}/students`),
-                            api.get(`/admin/courses/${id}/enrollments/candidates`),
+                            api.get(`/courses/${id}/students`),
+                            api.get(`/courses/${id}/enrollments/candidates`),
                         ]);
                         data.value.students = array(students);
                         candidates.value = enrolled.data.data.candidates;
@@ -150,7 +150,7 @@ export function usePageData(page) {
                     pagination.value = response.data.meta;
                     break;
                 case 'course-form':
-                    lecturers.value = array(await api.get('/admin/lecturers'));
+                    lecturers.value = array(await api.get('/lecturers'));
                     if (mode.value === 'edit') data.value = (await api.get(`/courses/${id}`)).data.data;
                     clearForm();
                     if (data.value) Object.assign(form, data.value);
@@ -187,7 +187,7 @@ export function usePageData(page) {
                     if (mode.value === 'edit') Object.assign(form, data.value);
                     break;
                 case 'users':
-                    response = await api.get('/admin/users', { params: { search: search.value || undefined, role: role.value || undefined, page: currentPage.value } });
+                    response = await api.get('/users', { params: { search: search.value || undefined, role: role.value || undefined, page: currentPage.value } });
                     rows.value = array(response);
                     pagination.value = response.data.meta;
                     break;
@@ -226,8 +226,8 @@ export function usePageData(page) {
                 case 'enrollment-form': {
                     data.value = (await api.get(`/courses/${id}`)).data.data;
                     const [students, candidatesResponse] = await Promise.all([
-                        api.get(`/admin/courses/${id}/students`, { params: { page: currentPage.value } }),
-                        api.get(`/admin/courses/${id}/enrollments/candidates`),
+                        api.get(`/courses/${id}/students`, { params: { page: currentPage.value } }),
+                        api.get(`/courses/${id}/enrollments/candidates`),
                     ]);
                     data.value.students = array(students);
                     pagination.value = students.data.meta;
@@ -258,12 +258,12 @@ export function usePageData(page) {
         try {
             const id = route.params.id;
             if (page === 'grade' && user.value.role === 'dosen') {
-                await api.put(`/lecturer/submissions/${data.value.id}/grade`, form);
+                await api.put(`/submissions/${data.value.id}/grade`, form);
                 await router.push(`/submissions/${data.value.id}`);
                 return;
             }
             if (page === 'enrollment-form') {
-                await api.post(`/admin/courses/${id}/enrollments`, form);
+                await api.post(`/courses/${id}/enrollments`, form);
                 await router.push(`/courses/${id}/enrollments`);
                 return;
             }
@@ -279,19 +279,10 @@ export function usePageData(page) {
             const editing = mode.value === 'edit';
             const payload = Object.fromEntries(fields.value.map(({ name }) => [name, form[name]]));
             const resource = {
-                'course-form': {
-                    url: editing ? `/admin/courses/${id}` : '/admin/courses',
-                    back: editing ? `/courses/${id}` : '/courses',
-                },
-                'assignment-form': {
-                    url: editing ? `/lecturer/assignments/${id}` : '/lecturer/assignments',
-                    back: editing ? `/courses/${data.value.course_id}/assignments` : `/courses/${id}`,
-                },
-                'material-form': {
-                    url: editing ? `/lecturer/materials/${id}` : `/lecturer/courses/${id}/materials`,
-                    back: editing ? `/courses/${data.value.course_id}/materials` : `/courses/${id}/materials`,
-                },
-                'user-form': { url: editing ? `/users/${id}` : '/admin/users', back: editing ? `/users/${id}` : '/users' },
+                'course-form': { url: editing ? `/courses/${id}` : '/courses', back: editing ? `/courses/${id}` : '/courses' },
+                'assignment-form': { url: editing ? `/assignments/${id}` : '/assignments', back: editing ? `/courses/${data.value.course_id}/assignments` : `/courses/${id}` },
+                'material-form': { url: editing ? `/materials/${id}` : `/courses/${id}/materials`, back: editing ? `/courses/${data.value.course_id}/materials` : `/courses/${id}/materials` },
+                'user-form': { url: editing ? `/users/${id}` : '/users', back: editing ? `/users/${id}` : '/users' },
             }[page];
             if (page === 'assignment-form' && !editing) payload.course_id = id;
             if (page === 'material-form') {
@@ -328,15 +319,8 @@ export function usePageData(page) {
 
     async function remove(kind, item) {
         if (!window.confirm(`Hapus ${kind} ini?`)) return;
-        // Peta kind ke prefix URL yang sesuai dengan role group di api.php
-        const deleteUrlMap = {
-            courses: `/admin/courses/${item.id}`,
-            users: `/admin/users/${item.id}`,
-            assignments: `/lecturer/assignments/${item.id}`,
-            materials: `/lecturer/materials/${item.id}`,
-        };
         try {
-            await api.delete(deleteUrlMap[kind] ?? `/${kind}/${item.id}`);
+            await api.delete(`/${kind}/${item.id}`);
             if (kind === 'courses') return router.push('/courses');
             if (kind === 'users' && page === 'user') return router.push('/users');
             if (kind === 'assignments') return router.push(`/courses/${item.course_id ?? data.value.course_id ?? data.value.id}/assignments`);
@@ -349,7 +333,7 @@ export function usePageData(page) {
 
     async function enroll(userId) {
         try {
-            await api.post(`/admin/courses/${route.params.id}/enrollments`, { user_id: userId });
+            await api.post(`/courses/${route.params.id}/enrollments`, { user_id: userId });
             await load();
         } catch (requestError) {
             error.value = getErrorMessage(requestError);
@@ -358,7 +342,7 @@ export function usePageData(page) {
 
     async function removeStudent(student) {
         try {
-            await api.delete(`/admin/courses/${route.params.id}/enrollments/${student.id}`);
+            await api.delete(`/courses/${route.params.id}/enrollments/${student.id}`);
             await load();
         } catch (requestError) {
             error.value = getErrorMessage(requestError);

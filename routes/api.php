@@ -22,90 +22,78 @@ Route::prefix('v1')->name('api.v1.')->middleware('throttle:60,1')->group(functio
 
     // ── Authenticated Routes ─────────────────────────────────────────────────
     Route::middleware('auth:sanctum')->group(function () {
-
-        // Auth self-management (semua peran)
+        // Auth & Self-management
         Route::post('/auth/logout', [AuthController::class, 'logout'])->name('auth.logout');
         Route::get('/me', [AuthController::class, 'me'])->name('me');
         Route::patch('/me', [PortalController::class, 'updateCurrentUser'])->name('me.update');
 
-        // Dashboard (semua peran)
+        // Dashboard
         Route::get('/dashboard', [PortalController::class, 'dashboard'])->name('dashboard');
 
-        // Notifikasi (semua peran)
+        // Notifikasi
         Route::prefix('notifications')->name('notifications.')->group(function () {
             Route::get('/', [NotificationController::class, 'index'])->name('index');
             Route::post('/{notification}/read', [NotificationController::class, 'read'])->name('read');
             Route::post('/read-all', [NotificationController::class, 'readAll'])->name('read-all');
         });
 
-        // ── Peran: Admin ─────────────────────────────────────────────────────
-        Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
-            // Manajemen pengguna
+        // ── Grup Rute: Admin ─────────────────────────────────────────────────
+        Route::middleware('role:admin')->group(function () {
             Route::get('/users', [PortalController::class, 'users'])->name('users.index');
             Route::post('/users', [PortalController::class, 'storeUser'])->name('users.store');
             Route::delete('/users/{user}', [PortalController::class, 'destroyUser'])->name('users.destroy');
             Route::get('/lecturers', [PortalController::class, 'lecturers'])->name('lecturers.index');
 
-            // Manajemen mata kuliah
             Route::post('/courses', [PortalController::class, 'storeCourse'])->name('courses.store');
             Route::put('/courses/{course}', [PortalController::class, 'updateCourse'])->name('courses.update');
             Route::delete('/courses/{course}', [PortalController::class, 'destroyCourse'])->name('courses.destroy');
-
-            // Manajemen enrollment (nested shallow)
-            Route::scopeBindings()->group(function () {
-                Route::get('/courses/{course}/enrollments/candidates', [PortalController::class, 'enrollmentCandidates'])->name('courses.enrollments.candidates');
-                Route::get('/courses/{course}/students', [PortalController::class, 'courseStudents'])->name('courses.students');
-                Route::post('/courses/{course}/enrollments', [PortalController::class, 'storeEnrollment'])->name('courses.enrollments.store');
-                Route::delete('/courses/{course}/enrollments/{user}', [PortalController::class, 'destroyEnrollment'])->name('courses.enrollments.destroy');
-            });
         });
 
-        // Manajemen pengguna – lihat & update (admin + diri sendiri via policy)
+        // User profile & edit (Admin + Diri sendiri via Policy)
         Route::get('/users/{user}', [PortalController::class, 'showUser'])->name('users.show');
         Route::put('/users/{user}', [PortalController::class, 'updateUser'])->name('users.update');
 
-        // ── Peran: Dosen & Admin ─────────────────────────────────────────────
-        Route::prefix('lecturer')->name('lecturer.')->middleware('role:dosen,admin')->group(function () {
-            // Manajemen tugas
-            Route::post('/assignments', [AssignmentApiController::class, 'store'])->name('assignments.store');
-            Route::match(['put', 'patch'], '/assignments/{assignment}', [AssignmentApiController::class, 'update'])->name('assignments.update');
-            Route::delete('/assignments/{assignment}', [AssignmentApiController::class, 'destroy'])->name('assignments.destroy');
-
-            // Manajemen materi (nested shallow + scopeBindings)
-            Route::scopeBindings()->group(function () {
-                Route::post('/courses/{course}/materials', [PortalController::class, 'storeMaterial'])->name('courses.materials.store');
-            });
-            Route::put('/materials/{material}', [PortalController::class, 'updateMaterial'])->name('materials.update');
-            Route::delete('/materials/{material}', [PortalController::class, 'destroyMaterial'])->name('materials.destroy');
-
-            // Penilaian (dosen)
+        // ── Grup Rute: Dosen & Admin (Penilaian) ──────────────────────────────
+        Route::middleware('role:dosen,admin')->group(function () {
             Route::put('/submissions/{submission}/grade', [SubmissionController::class, 'grade'])->name('submissions.grade');
             Route::post('/grades/{grade}/publish', [SubmissionController::class, 'publishGrade'])->name('grades.publish');
         });
 
-        // ── Endpoint bersama (semua peran terautentikasi) ────────────────────
-
-        // Mata kuliah
+        // ── Course & Scoped Resources (Nested + scopeBindings) ───────────────
         Route::get('/my/courses', [CourseApiController::class, 'index'])->defaults('scope', 'my')->name('my.courses');
         Route::get('/courses', [CourseApiController::class, 'index'])->name('courses.index');
         Route::get('/courses/{course}', [CourseApiController::class, 'show'])->name('courses.show');
 
-        // Materi (nested shallow + scopeBindings untuk list per-course)
         Route::scopeBindings()->group(function () {
-            Route::get('/courses/{course}/materials', [CourseApiController::class, 'materials'])->name('courses.materials.index');
-            Route::get('/courses/{course}/assignments', [CourseApiController::class, 'assignments'])->name('courses.assignments.index');
+            // Enrollment management (admin & course lecturer via policy)
+            Route::get('/courses/{course}/enrollments/candidates', [PortalController::class, 'enrollmentCandidates'])->name('courses.enrollments.candidates');
+            Route::get('/courses/{course}/students', [PortalController::class, 'courseStudents'])->name('courses.students');
+            Route::post('/courses/{course}/enrollments', [PortalController::class, 'storeEnrollment'])->name('courses.enrollments.store');
+            Route::delete('/courses/{course}/enrollments/{user}', [PortalController::class, 'destroyEnrollment'])->name('courses.enrollments.destroy');
+
+            // Course materials & assignments list
+            Route::get('/courses/{course}/materials', [CourseApiController::class, 'materials'])->name('courses.materials');
+            Route::post('/courses/{course}/materials', [PortalController::class, 'storeMaterial'])->name('materials.store');
+            Route::get('/courses/{course}/assignments', [CourseApiController::class, 'assignments'])->name('courses.assignments');
+
+            // Submissions nested under assignments
+            Route::get('/assignments/{assignment}/submissions', [AssignmentApiController::class, 'submissions'])->name('assignments.submissions');
+            Route::post('/assignments/{assignment}/submissions', [AssignmentApiController::class, 'submit'])->name('assignments.submit');
         });
+
+        // Materials shallow routes
         Route::get('/materials/{material}', [PortalController::class, 'showMaterial'])->name('materials.show');
         Route::get('/materials/{material}/download', [PortalController::class, 'downloadMaterial'])->name('materials.download');
+        Route::put('/materials/{material}', [PortalController::class, 'updateMaterial'])->name('materials.update');
+        Route::delete('/materials/{material}', [PortalController::class, 'destroyMaterial'])->name('materials.destroy');
 
-        // Tugas
+        // Assignments shallow routes
+        Route::post('/assignments', [AssignmentApiController::class, 'store'])->name('assignments.store');
+        Route::match(['put', 'patch'], '/assignments/{assignment}', [AssignmentApiController::class, 'update'])->name('assignments.update');
         Route::get('/assignments/{assignment}', [AssignmentApiController::class, 'show'])->name('assignments.show');
+        Route::delete('/assignments/{assignment}', [AssignmentApiController::class, 'destroy'])->name('assignments.destroy');
 
-        // Pengumpulan & penilaian
-        Route::scopeBindings()->group(function () {
-            Route::get('/assignments/{assignment}/submissions', [AssignmentApiController::class, 'submissions'])->name('assignments.submissions.index');
-            Route::post('/assignments/{assignment}/submissions', [AssignmentApiController::class, 'submit'])->name('assignments.submissions.store');
-        });
+        // Submissions & Grades
         Route::get('/my/submissions', [SubmissionController::class, 'mine'])->name('submissions.mine');
         Route::get('/submissions/{submission}', [SubmissionController::class, 'show'])->name('submissions.show');
         Route::put('/submissions/{submission}', [SubmissionController::class, 'updateMine'])->name('submissions.update');

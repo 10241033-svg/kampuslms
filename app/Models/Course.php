@@ -41,6 +41,11 @@ class Course extends Model
             ->withTimestamps();
     }
 
+    public function users(): BelongsToMany
+    {
+        return $this->students();
+    }
+
     public function materials(): HasMany
     {
         return $this->hasMany(Material::class);
