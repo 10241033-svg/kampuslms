@@ -17,7 +17,7 @@ Platform Learning Management System (LMS) berbasis **Laravel API** dan **Vue 3 S
 ### 1. Initial Clone
 Buka terminal/PowerShell di folder directory, lalu jalankan:
 ```shell
-git clone -b auth-policy [https://github.com/wiranata-orion/kampuslms-kelompok-04.git](https://github.com/wiranata-orion/kampuslms-kelompok-04.git)
+git clone https://github.com/wiranata-orion/kampuslms-kelompok-04
 cd kampuslms-kelompok-04
 ```
 
@@ -41,8 +41,8 @@ git push origin main
 
 Untuk mempermudah setup environment, disarankan menggunakan **[Laravel Herd](https://herd.laravel.com/)** (Windows & macOS).
 
-Software yang dibutuhkan:
-- **PHP 8.2+** & **Composer** (Otomatis disertakan jika menggunakan Laravel Herd)
+Requirements :
+- **PHP 8.4+** & **Composer** (Otomatis disertakan jika menggunakan Laravel Herd)
 - **[Node.js](https://nodejs.org/) (LTS)** & **NPM**
 - **[Git](https://git-scm.com/)**
 - **Database Engine**: **SQLite** (siap pakai) atau **MySQL** (via XAMPP / Laragon)
@@ -59,11 +59,22 @@ cd kampuslms-kelompok-04
 #### 2. Install Dependensi Backend (Composer)
 Unduh seluruh package PHP dan framework Laravel:
 ```shell
+composer install
+```
+
+Jika sebelumnya gagal
+```shell
 composer install --ignore-platform-reqs
 ```
 
 #### 3. Install Dependensi Frontend (NPM)
 Unduh Vue 3, Vue Router, Axios, Vite, dan Tailwind CSS:
+
+```shell
+npm run dev
+```
+
+Jika sebelumnya gagal
 ```shell
 npm install --legacy-peer-deps
 ```
