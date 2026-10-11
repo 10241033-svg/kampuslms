@@ -10,7 +10,7 @@ class UserFactory extends Factory
 {
     public function definition(): array
     {
-        $password_hash = Hash::make(env('DEMO_ACCOUNT_PASSWORD', 'test1234'));
+        $password_hash = Hash::make(env('DEMO_ACCOUNT_PASSWORD'));
         return [
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(), // baikin agar hasilnya jadi @stundet.itk.ac.id
