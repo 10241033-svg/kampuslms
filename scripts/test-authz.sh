@@ -11,5 +11,3 @@ CACHE_STORE=array \
 SESSION_DRIVER=array \
 "$PHP_BIN" vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php \
 	tests/Feature/AuthorizationPolicyTest.php
-
-read -rp "Tekan [Enter] untuk keluar..."

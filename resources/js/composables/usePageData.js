@@ -12,6 +12,7 @@ export function usePageData(page) {
     const candidates = ref([]);
     const loading = ref(false);
     const error = ref('');
+    const fieldErrors = reactive({});
     const search = ref('');
     const status = ref('');
     const role = ref('');
@@ -252,6 +253,8 @@ export function usePageData(page) {
 
     async function submit() {
         error.value = '';
+        // Bersihkan error per-field sebelum submit
+        for (const key of Object.keys(fieldErrors)) delete fieldErrors[key];
         try {
             const id = route.params.id;
             if (page === 'grade' && user.value.role === 'dosen') {
@@ -292,6 +295,13 @@ export function usePageData(page) {
             }
             await router.push(resource.back);
         } catch (requestError) {
+            // Tangani error validasi 422: isi fieldErrors per field
+            const responseErrors = requestError.response?.data?.errors;
+            if (requestError.response?.status === 422 && responseErrors) {
+                Object.assign(fieldErrors, Object.fromEntries(
+                    Object.entries(responseErrors).map(([key, messages]) => [key, messages[0]]),
+                ));
+            }
             error.value = getErrorMessage(requestError);
         }
     }
@@ -403,7 +413,7 @@ export function usePageData(page) {
     onMounted(load);
 
     return {
-        user, data, rows, lecturers, candidates, loading, error, search, status, role,
+        user, data, rows, lecturers, candidates, loading, error, fieldErrors, search, status, role,
         currentPage, pagination, form, fields, mode, router, load, submit, login,
         remove, enroll, removeStudent, readNotification, readAllNotifications,
         download, submitAssignment, goToPage, setFile,

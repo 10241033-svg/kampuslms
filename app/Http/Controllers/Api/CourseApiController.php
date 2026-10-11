@@ -46,20 +46,16 @@ class CourseApiController extends Controller
         return ApiResponse::collection($courses, CourseResource::class, $request);
     }
 
-    public function show(Request $request, int $id): CourseResource
+    public function show(Request $request, Course $course): CourseResource
     {
-        $course = Course::with('lecturer')
-            ->withCount(['materials', 'assignments'])
-            ->findOrFail($id);
-
+        $course->load('lecturer')->loadCount(['materials', 'assignments']);
         Gate::authorize('view', $course);
 
         return new CourseResource($course);
     }
 
-    public function materials(Request $request, int $id)
+    public function materials(Request $request, Course $course)
     {
-        $course = Course::findOrFail($id);
         Gate::authorize('viewAny', [Material::class, $course]);
 
         $materials = $course->materials()
@@ -70,9 +66,8 @@ class CourseApiController extends Controller
         return ApiResponse::collection($materials, MaterialResource::class, $request);
     }
 
-    public function assignments(Request $request, int $id)
+    public function assignments(Request $request, Course $course)
     {
-        $course = Course::findOrFail($id);
         Gate::authorize('viewAny', [Assignment::class, $course]);
 
         $validated = $request->validate([
