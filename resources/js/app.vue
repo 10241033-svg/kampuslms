@@ -5,7 +5,7 @@
             <nav class="nav-row">
                 <RouterLink to="/dashboard">Dashboard</RouterLink>
                 <RouterLink v-if="user.role !== 'admin'" to="/my/courses">Kelas saya</RouterLink>
-                <RouterLink to="/courses">Mata kuliah</RouterLink>
+                <RouterLink v-if="user.role === 'admin'"to="/courses">Mata kuliah</RouterLink>
                 <RouterLink v-if="user.role === 'admin'" to="/users">Pengguna</RouterLink>
                 <RouterLink v-if="user.role === 'mahasiswa'" to="/my/submissions">Pengumpulan saya</RouterLink>
                 <RouterLink to="/notifications">Notifikasi</RouterLink>
