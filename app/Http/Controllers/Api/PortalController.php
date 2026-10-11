@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreCourseRequest;
 use App\Http\Requests\StoreMaterialRequest;
+use App\Http\Requests\UpdateCourseRequest;
 use App\Http\Requests\UpdateMaterialRequest;
 use App\Http\Resources\CourseResource;
 use App\Http\Resources\MaterialResource;
@@ -149,17 +151,10 @@ class PortalController extends Controller
         ]);
     }
 
-    public function storeCourse(Request $request): JsonResponse
+    public function storeCourse(StoreCourseRequest $request): JsonResponse
     {
         Gate::authorize('create', Course::class);
-        $validated = $request->validate([
-            'code' => ['required', 'string', 'max:20', 'unique:courses,code'],
-            'name' => ['required', 'string', 'max:150'],
-            'description' => ['nullable', 'string'],
-            'sks' => ['required', 'integer', 'between:1,6'],
-            'lecturer_id' => ['required', 'integer', Rule::exists('users', 'id')->where('role', 'dosen')],
-            'status' => ['required', 'in:draft,active,archived'],
-        ]);
+        $validated = $request->validated();
 
         $course = new Course;
         $course->code = $validated['code'];
@@ -174,17 +169,10 @@ class PortalController extends Controller
         return response()->json(['data' => (new CourseResource($course))->resolve($request)], 201);
     }
 
-    public function updateCourse(Request $request, Course $course): JsonResponse
+    public function updateCourse(UpdateCourseRequest $request, Course $course): JsonResponse
     {
         Gate::authorize('update', $course);
-        $validated = $request->validate([
-            'code' => ['required', 'string', 'max:20', Rule::unique('courses', 'code')->ignore($course->id)],
-            'name' => ['required', 'string', 'max:150'],
-            'description' => ['nullable', 'string'],
-            'sks' => ['required', 'integer', 'between:1,6'],
-            'lecturer_id' => ['required', 'integer', Rule::exists('users', 'id')->where('role', 'dosen')],
-            'status' => ['required', 'in:draft,active,archived'],
-        ]);
+        $validated = $request->validated();
 
         $course->code = $validated['code'];
         $course->name = $validated['name'];

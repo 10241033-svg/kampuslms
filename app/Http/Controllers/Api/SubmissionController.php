@@ -27,18 +27,17 @@ class SubmissionController extends Controller
         return ApiResponse::collection($submissions, SubmissionResource::class, $request);
     }
 
-    public function show(Request $request, int $id): SubmissionResource
+    public function show(Request $request, Submission $submission): SubmissionResource
     {
-        $submission = Submission::with(['assignment.course', 'student', 'grade.grader'])->findOrFail($id);
+        $submission->load(['assignment.course', 'student', 'grade.grader']);
         Gate::authorize('view', $submission);
 
         return new SubmissionResource($submission);
     }
 
-    public function showGrade(Request $request, int $id): SubmissionResource
+    public function showGrade(Request $request, Grade $grade): SubmissionResource
     {
-        $grade = Grade::with(['submission.assignment.course', 'submission.student', 'grader'])
-            ->findOrFail($id);
+        $grade->load(['submission.assignment.course', 'submission.student', 'grader']);
         Gate::authorize('view', $grade);
 
         $grade->submission->setRelation('grade', $grade);
@@ -46,33 +45,32 @@ class SubmissionController extends Controller
         return new SubmissionResource($grade->submission);
     }
 
-    public function updateMine(Request $request, int $id): never
+    public function updateMine(Request $request, Submission $submission): never
     {
-        $submission = Submission::findOrFail($id);
         Gate::authorize('update', $submission);
         abort(403);
     }
 
-    public function download(Request $request, int $id)
+    public function download(Request $request, Submission $submission)
     {
-        $submission = Submission::with('assignment.course')->findOrFail($id);
+        $submission->load('assignment.course');
         Gate::authorize('view', $submission);
 
         return Storage::disk('local')->download($submission->file_path, $submission->original_name);
     }
 
-    public function studentGrade(Request $request, int $id): GradeResource
+    public function studentGrade(Request $request, Submission $submission): GradeResource
     {
-        $submission = Submission::with(['assignment.course', 'grade.grader'])->findOrFail($id);
+        $submission->load(['assignment.course', 'grade.grader']);
         abort_unless($submission->grade, 404);
         Gate::authorize('view', $submission->grade);
 
         return new GradeResource($submission->grade);
     }
 
-    public function grade(Request $request, int $id): JsonResponse
+    public function grade(Request $request, Submission $submission): JsonResponse
     {
-        $submission = Submission::with(['assignment.course', 'grade'])->findOrFail($id);
+        $submission->load(['assignment.course', 'grade']);
         $grade = $submission->grade;
         Gate::authorize($grade ? 'update' : 'create', $grade ?? [Grade::class, $submission]);
 
@@ -94,9 +92,9 @@ class SubmissionController extends Controller
             ->setStatusCode($grade->wasRecentlyCreated ? 201 : 200);
     }
 
-    public function publishGrade(Request $request, int $id): GradeResource
+    public function publishGrade(Request $request, Grade $grade): GradeResource
     {
-        $grade = Grade::with('submission.assignment.course')->findOrFail($id);
+        $grade->load('submission.assignment.course');
         Gate::authorize('publish', $grade);
         $grade->published_at = now();
         $grade->save();
