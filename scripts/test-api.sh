@@ -18,8 +18,8 @@ BASE_URL="${BASE_URL:-http://127.0.0.1:8000/api/v1}"
 
 # Akun skenario IDOR dari database lokal
 MAHASISWA_EMAIL="mahasiswa@kampuslms.test"
-DOSEN_A_EMAIL="dosen-a@kampuslms.test"
-DOSEN_B_EMAIL="dosen-b@kampuslms.test"
+DOSEN_A_EMAIL="dosen@kampuslms.test"
+DOSEN_B_EMAIL="nbogan@example.org"
 PASSWORD="1234"
 
 for command in curl jq; do

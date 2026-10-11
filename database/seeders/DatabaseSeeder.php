@@ -31,6 +31,7 @@ class DatabaseSeeder extends Seeder
             'status' => 'active',
             'lecturer_id' => fn () => $allDosens->random()->id,
         ]);
+        $courses->first()->update(['lecturer_id' => $demoDosen->id]);
 
         // 4. Enroll Mahasiswa (Tiap MK minimal 15 Mahasiswa)
         foreach ($courses as $course) {
