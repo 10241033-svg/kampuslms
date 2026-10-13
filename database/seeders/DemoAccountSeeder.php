@@ -10,7 +10,7 @@ class DemoAccountSeeder extends Seeder
 {
     public function run(): void
     {
-        $password_hash = Hash::make(env('DEMO_ACCOUNT_PASSWORD', 'password'));
+        $password_hash = Hash::make(env('DEMO_ACCOUNT_PASSWORD', 'test1234'));
 
         // 1. Akun Demo Admin
         User::updateOrCreate(
@@ -36,7 +36,19 @@ class DemoAccountSeeder extends Seeder
             ]
         );
 
-        // 3. Akun Demo Mahasiswa
+        // 3. Akun Dosen pembanding untuk pengujian otorisasi
+        User::updateOrCreate(
+            ['email' => 'nbogan@example.org'],
+            [
+                'name' => 'Dosen Pembanding',
+                'password' => $password_hash,
+                'role' => 'dosen',
+                'nim_nip' => '198801012022011002',
+                'email_verified_at' => now(),
+            ]
+        );
+
+        // 4. Akun Demo Mahasiswa
         User::updateOrCreate(
             ['email' => 'mahasiswa@kampuslms.test'],
             [
