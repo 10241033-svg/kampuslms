@@ -17,9 +17,9 @@ use Illuminate\Support\Facades\Gate;
 
 class AssignmentApiController extends Controller
 {
-    public function show(Request $request, int $id): AssignmentResource
+    public function show(Request $request, Assignment $assignment): AssignmentResource
     {
-        $assignment = Assignment::with('course')->findOrFail($id);
+        $assignment->load('course');
         Gate::authorize('view', $assignment);
 
         return new AssignmentResource($assignment);
@@ -52,18 +52,18 @@ class AssignmentApiController extends Controller
         return new AssignmentResource($assignment);
     }
 
-    public function destroy(Request $request, int $id)
+    public function destroy(Request $request, Assignment $assignment)
     {
-        $assignment = Assignment::with('course')->findOrFail($id);
+        $assignment->load('course');
         Gate::authorize('delete', $assignment);
         $assignment->delete();
 
         return response()->noContent();
     }
 
-    public function submissions(Request $request, int $id)
+    public function submissions(Request $request, Assignment $assignment)
     {
-        $assignment = Assignment::with('course')->findOrFail($id);
+        $assignment->load('course');
         Gate::authorize('viewAny', [Submission::class, $assignment]);
 
         $submissions = $assignment->submissions()

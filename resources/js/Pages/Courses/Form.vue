@@ -11,6 +11,6 @@ const cancelTo = computed(() => page.mode.value === 'edit' ? `/courses/${page.da
 
 <template>
     <PageFrame :title="title" subtitle="Lengkapi identitas kelas dan tentukan dosen pengampunya." :loading="page.loading.value" :error="page.error.value">
-        <ResourceForm :fields="page.fields.value" :model="page.form" :busy="page.loading.value" :cancel-to="cancelTo" submit-label="Simpan mata kuliah" @submit="page.submit" />
+        <ResourceForm :fields="page.fields.value" :model="page.form" :field-errors="page.fieldErrors" :busy="page.loading.value" :cancel-to="cancelTo" submit-label="Simpan mata kuliah" @submit="page.submit" />
     </PageFrame>
 </template>

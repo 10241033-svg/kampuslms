@@ -3,10 +3,10 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreCourseRequest extends FormRequest
 {
-    // TODO: ganti dengan pengecekan hak akses sungguhan (Policy) di minggu 7
     public function authorize(): bool
     {
         return true;
@@ -19,7 +19,7 @@ class StoreCourseRequest extends FormRequest
             'name' => ['required', 'string', 'max:150'],
             'description' => ['nullable', 'string'],
             'sks' => ['required', 'integer', 'between:1,6'],
-            'lecturer_id' => ['required', 'exists:users,id'],
+            'lecturer_id' => ['required', 'integer', Rule::exists('users', 'id')->where('role', 'dosen')],
             'status' => ['required', 'in:draft,active,archived'],
         ];
     }

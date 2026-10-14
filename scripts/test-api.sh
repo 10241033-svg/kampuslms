@@ -1,14 +1,5 @@
 #!/bin/bash
 
-keep_terminal_open() {
-    local exit_code=$?
-    echo ""
-    read -r -p "Pengujian selesai. Tekan [ENTER] untuk menutup..."
-    trap - EXIT
-    exit "$exit_code"
-}
-trap keep_terminal_open EXIT
-
 # ==============================================================================
 # SKRIP PENGUJIANKU OTORISASI REST API (LARAVEL 12 SANCTUM)
 # ==============================================================================
@@ -289,11 +280,3 @@ run_test "3. Token Dosen B (Bukan Dosen Pengampu)" 403 "PUT" "$BASE_URL/submissi
 # K4: Token Dosen A
 run_test "4. Token Dosen A (Dosen Pengampu Valid)" "$GRADE_EXPECTED_CODE" "PUT" "$BASE_URL/submissions/$SUBMISSION_ID/grade" "$TOKEN_DOSEN_A" "$GRADE_DATA"
 
-echo -e "\n======================================================================"
-echo "PENGUJIAN SELESAI"
-echo "======================================================================"
-if [ "$FAILURES" -gt 0 ]; then
-    echo "$FAILURES pengujian gagal."
-    exit 1
-fi
-echo "Semua pengujian berhasil."

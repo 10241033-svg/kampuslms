@@ -11,6 +11,6 @@ const cancelTo = computed(() => page.mode.value === 'edit' ? `/assignments/${pag
 
 <template>
     <PageFrame :title="title" :subtitle="page.data.value?.course?.name" :loading="page.loading.value" :error="page.error.value">
-        <ResourceForm :fields="page.fields.value" :model="page.form" :busy="page.loading.value" :cancel-to="cancelTo" submit-label="Simpan tugas" @submit="page.submit" />
+        <ResourceForm :fields="page.fields.value" :model="page.form" :field-errors="page.fieldErrors" :busy="page.loading.value" :cancel-to="cancelTo" submit-label="Simpan tugas" @submit="page.submit" />
     </PageFrame>
 </template>

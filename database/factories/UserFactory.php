@@ -8,13 +8,14 @@ use Illuminate\Support\Facades\Hash;
 
 class UserFactory extends Factory
 {
+    protected static ?string $password;
+
     public function definition(): array
     {
-        $password_hash = Hash::make(env('DEMO_ACCOUNT_PASSWORD', 'test1234'));
         return [
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(), // baikin agar hasilnya jadi @stundet.itk.ac.id
-            'password' => $password_hash, // Hash default password
+            'password' => static::$password ??= Hash::make('password'),
             'role' => 'mahasiswa',
             'nim_nip' => fake()->unique()->numerify('1025####'),
             'email_verified_at' => now(),
