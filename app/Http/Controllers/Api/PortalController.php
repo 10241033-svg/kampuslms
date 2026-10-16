@@ -221,7 +221,6 @@ class PortalController extends Controller
         $material->loadMissing('course');
         Gate::authorize('download', $material);
 
-<<<<<<< HEAD
         abort_unless(
             $material->type === 'file' && filled($material->file_path),
             404,
@@ -229,12 +228,6 @@ class PortalController extends Controller
         );
 
         return PrivateFiles::response(
-=======
-        $disk = Storage::disk('local')->exists($material->file_path) ? 'local' : 'public';
-        abort_unless(Storage::disk($disk)->exists($material->file_path), 404, 'File materi tidak ditemukan.');
-
-        return Storage::disk($disk)->download(
->>>>>>> 7b98074d2fc3df7c83c23523f778f933c4dbc6db
             $material->file_path,
             $material->original_name,
             $request->boolean('preview')
@@ -254,10 +247,7 @@ class PortalController extends Controller
     public function destroyMaterial(Request $request, Material $material): JsonResponse
     {
         Gate::authorize('delete', $material);
-<<<<<<< HEAD
         // Berkas fisik dihapus oleh MaterialObserver::deleted().
-=======
->>>>>>> 7b98074d2fc3df7c83c23523f778f933c4dbc6db
         $material->delete();
 
         return response()->json(['data' => ['message' => 'Materi berhasil dihapus.']]);
@@ -336,18 +326,7 @@ class PortalController extends Controller
             }
             $material->external_url = null;
         } elseif ($validated['type'] === 'link') {
-<<<<<<< HEAD
             // Berkas lama dihapus oleh MaterialObserver::updated() saat file_path menjadi null.
-=======
-            if ($material->file_path) {
-                if (Storage::disk('local')->exists($material->file_path)) {
-                    Storage::disk('local')->delete($material->file_path);
-                }
-                if (Storage::disk('public')->exists($material->file_path)) {
-                    Storage::disk('public')->delete($material->file_path);
-                }
-            }
->>>>>>> 7b98074d2fc3df7c83c23523f778f933c4dbc6db
             $material->external_url = $validated['external_url'];
             $material->file_path = null;
             $material->original_name = null;

@@ -58,7 +58,6 @@ class SubmissionController extends Controller
         $submission->loadMissing('assignment.course');
         Gate::authorize('download', $submission);
 
-<<<<<<< HEAD
         abort_unless(filled($submission->file_path), 404, 'Berkas submission tidak tersedia.');
 
         $preview = $request->boolean('preview') && PrivateFiles::canPreview($submission->file_path);
@@ -79,15 +78,6 @@ class SubmissionController extends Controller
         }
 
         return $response;
-=======
-        abort_unless(
-            $submission->file_path && Storage::disk('local')->exists($submission->file_path),
-            404,
-            'File tugas tidak ditemukan.'
-        );
-
-        return Storage::disk('local')->download($submission->file_path, $submission->original_name);
->>>>>>> 7b98074d2fc3df7c83c23523f778f933c4dbc6db
     }
 
     public function studentGrade(Request $request, Submission $submission): GradeResource
