@@ -307,14 +307,6 @@ class PortalController extends Controller
         if ($validated['type'] === 'file') {
             if ($request && $request->hasFile('file')) {
                 $file = $request->file('file');
-                if ($material->file_path) {
-                    if (Storage::disk('local')->exists($material->file_path)) {
-                        Storage::disk('local')->delete($material->file_path);
-                    }
-                    if (Storage::disk('public')->exists($material->file_path)) {
-                        Storage::disk('public')->delete($material->file_path);
-                    }
-                }
                 $material->file_path = $file->store("materials/{$material->course_id}", 'local');
                 $material->original_name = $file->getClientOriginalName();
                 $material->file_size = $file->getSize();
