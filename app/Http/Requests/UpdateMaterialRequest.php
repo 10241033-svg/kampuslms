@@ -18,12 +18,19 @@ class UpdateMaterialRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
+        $material = $this->route('material');
         if ($this->hasFile('file') && $this->input('type') === 'file') {
             $file = $this->file('file');
             $this->merge([
                 'original_name' => $this->input('original_name') ?: $file->getClientOriginalName(),
                 'file_size' => $this->input('file_size') ?: $file->getSize(),
                 'mime_type' => $this->input('mime_type') ?: $file->getMimeType(),
+            ]);
+        } elseif ($material instanceof Material && $this->input('type') === 'file') {
+            $this->merge([
+                'original_name' => $this->input('original_name') ?: $material->original_name,
+                'file_size' => $this->input('file_size') ?: $material->file_size,
+                'mime_type' => $this->input('mime_type') ?: $material->mime_type,
             ]);
         }
     }
