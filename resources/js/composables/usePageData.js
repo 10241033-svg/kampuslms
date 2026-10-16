@@ -381,6 +381,25 @@ export function usePageData(page) {
         }
     }
 
+    // Pratinjau PDF di tab baru tanpa URL permanen: blob dibuat di memori dan dicabut setelah dipakai.
+    async function preview(url) {
+        // Tab dibuka sinkron agar tidak diblokir popup blocker.
+        const tab = window.open('', '_blank');
+        try {
+            const response = await api.get(url, { responseType: 'blob', params: { preview: 1 } });
+            const objectUrl = URL.createObjectURL(response.data);
+            if (tab) {
+                tab.location.href = objectUrl;
+            } else {
+                window.open(objectUrl, '_blank');
+            }
+            setTimeout(() => URL.revokeObjectURL(objectUrl), 60000);
+        } catch (requestError) {
+            tab?.close();
+            error.value = getErrorMessage(requestError);
+        }
+    }
+
     async function submitAssignment(file, note) {
         if (!file) {
             error.value = 'Pilih berkas pengumpulan terlebih dahulu.';
@@ -416,6 +435,6 @@ export function usePageData(page) {
         user, data, rows, lecturers, candidates, loading, error, fieldErrors, search, status, role,
         currentPage, pagination, form, fields, mode, router, load, submit, login,
         remove, enroll, removeStudent, readNotification, readAllNotifications,
-        download, submitAssignment, goToPage, setFile,
+        download, preview, submitAssignment, goToPage, setFile,
     };
 }
