@@ -13,13 +13,13 @@ di `AuthServiceProvider`.
 | Hapus course | Hanya jika tidak memiliki enrollment, materi, atau tugas | Tidak | Tidak |
 | Lihat materi | Semua | Materi course yang diampu | Materi course `active` yang diikuti |
 | CRUD materi | Ya | Hanya pada course yang diampu | Tidak |
-| Lihat tugas | Semua | Tugas course yang diampu | Tugas `published` pada course `active` yang diikuti |
-| Buat/ubah tugas | Ya | Hanya pada course yang diampu | Tidak |
-| Hapus tugas | Jika belum memiliki nilai | Jika course diampu dan belum memiliki nilai | Tidak |
+| Lihat assignment | Semua | Tugas course yang diampu | Tugas `published` pada course `active` yang diikuti |
+| Buat/ubah assignment | Ya | Hanya pada course yang diampu | Tidak |
+| Hapus assignment | Jika belum memiliki nilai | Jika course diampu dan belum memiliki nilai | Tidak |
 | Lihat daftar submission per tugas | Ya | Jika course diampu | Tidak |
 | Lihat/unduh submission | Ya | Jika course diampu | Submission milik sendiri |
 | Membuat submission | Tidak | Tidak | Peserta terdaftar, tugas `published`, course `active`, dan belum pernah mengumpulkan |
-| Mengubah submission | Tidak | Tidak | Tidak; revisi tidak diperbolehkan |
+| Mengubah submission | Tidak | Tidak | Iya; Jika belum dinilai |
 | Menghapus submission | Ya | Jika course diampu | Tidak |
 | Melihat nilai | Ya | Jika course diampu | Nilai sendiri setelah dipublikasikan |
 | Memberi/mengubah/mempublikasikan nilai | Tidak | Jika course diampu | Tidak |
