@@ -14,10 +14,10 @@ use App\Models\Course;
 use App\Models\Material;
 use App\Models\User;
 use App\Support\ApiResponse;
+use App\Support\PrivateFiles;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
 class PortalController extends Controller
@@ -218,12 +218,19 @@ class PortalController extends Controller
 
     public function downloadMaterial(Request $request, Material $material)
     {
-        Gate::authorize('view', $material);
-        abort_unless($material->file_path, 404, 'File materi tidak tersedia.');
+        $material->loadMissing('course');
+        Gate::authorize('download', $material);
 
-        return Storage::disk('public')->download(
+        abort_unless(
+            $material->type === 'file' && filled($material->file_path),
+            404,
+            'File materi tidak tersedia.'
+        );
+
+        return PrivateFiles::response(
             $material->file_path,
-            $material->original_name ?: basename($material->file_path)
+            $material->original_name,
+            $request->boolean('preview')
         );
     }
 
@@ -240,9 +247,7 @@ class PortalController extends Controller
     public function destroyMaterial(Request $request, Material $material): JsonResponse
     {
         Gate::authorize('delete', $material);
-        if ($material->file_path) {
-            Storage::disk('public')->delete($material->file_path);
-        }
+        // Berkas fisik dihapus oleh MaterialObserver::deleted().
         $material->delete();
 
         return response()->json(['data' => ['message' => 'Materi berhasil dihapus.']]);
@@ -305,9 +310,7 @@ class PortalController extends Controller
             $material->mime_type = $validated['mime_type'] ?? null;
             $material->external_url = null;
         } elseif ($validated['type'] === 'link') {
-            if ($material->file_path) {
-                Storage::disk('public')->delete($material->file_path);
-            }
+            // Berkas lama dihapus oleh MaterialObserver::updated() saat file_path menjadi null.
             $material->external_url = $validated['external_url'];
             $material->file_path = null;
             $material->original_name = null;
