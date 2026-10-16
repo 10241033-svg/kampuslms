@@ -17,10 +17,11 @@ class DatabaseSeeder extends Seeder
         // 1. Jalankan Seeder Akun Demo Wajib
         $this->call(DemoAccountSeeder::class);
 
-        // 2. Generate Pengguna Tambahan (Total minimal: 1 Admin, 3 Dosen, 30 Mahasiswa)
-        $dosens = User::factory()->dosen()->count(2)->create(); // +1 dari akun demo
+        // 2. Generate Pengguna Tambahan (Total: 1 Admin, 3 Dosen, 30 Mahasiswa)
+        $dosens = User::factory()->dosen()->count(1)->create(); // +2 dari akun demo
         $demoDosen = User::where('email', 'dosen@kampuslms.test')->first();
-        $allDosens = $dosens->concat([$demoDosen]);
+        $otherDosen = User::where('email', 'nbogan@example.org')->first();
+        $allDosens = $dosens->concat(array_filter([$demoDosen, $otherDosen]));
 
         $mahasiswas = User::factory()->count(29)->create(); // +1 dari akun demo
         $demoMahasiswa = User::where('email', 'mahasiswa@kampuslms.test')->first();
@@ -31,6 +32,7 @@ class DatabaseSeeder extends Seeder
             'status' => 'active',
             'lecturer_id' => fn () => $allDosens->random()->id,
         ]);
+        $courses->first()->update(['lecturer_id' => $demoDosen->id]);
 
         // 4. Enroll Mahasiswa (Tiap MK minimal 15 Mahasiswa)
         foreach ($courses as $course) {
@@ -97,7 +99,7 @@ class DatabaseSeeder extends Seeder
         }
 
         // 7. Penilaian Submissions (>= 100 submission, ~60% dinilai)
-        $submissions = Submission::all();
+        $submissions = Submission::with('assignment.course')->get();
         $targetGradedCount = (int) ($submissions->count() * 0.6);
 
         $submissionsToGrade = $submissions->random(min($targetGradedCount, $submissions->count()));

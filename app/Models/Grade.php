@@ -11,8 +11,11 @@ class Grade extends Model
     use HasFactory;
 
     protected $fillable = [
+        'submission_id',
+        'graded_by',
         'score',
         'feedback',
+        'graded_at',
     ];
 
     protected function casts(): array
@@ -20,6 +23,7 @@ class Grade extends Model
         return [
             'score' => 'decimal:2',
             'graded_at' => 'datetime',
+            'published_at' => 'datetime',
         ];
     }
 
