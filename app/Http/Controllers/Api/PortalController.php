@@ -201,7 +201,7 @@ class PortalController extends Controller
         $material = new Material;
         $material->course_id = $course->id;
         $material->uploaded_by = $request->user()->id;
-        $this->fillMaterial($material, $validated);
+        $this->fillMaterial($material, $validated, $request);
         $material->save();
         $material->load('uploader');
 
@@ -221,7 +221,10 @@ class PortalController extends Controller
         Gate::authorize('view', $material);
         abort_unless($material->file_path, 404, 'File materi tidak tersedia.');
 
-        return Storage::disk('public')->download(
+        $disk = Storage::disk('local')->exists($material->file_path) ? 'local' : 'public';
+        abort_unless(Storage::disk($disk)->exists($material->file_path), 404, 'File materi tidak ditemukan.');
+
+        return Storage::disk($disk)->download(
             $material->file_path,
             $material->original_name ?: basename($material->file_path)
         );
@@ -230,7 +233,7 @@ class PortalController extends Controller
     public function updateMaterial(UpdateMaterialRequest $request, Material $material): JsonResponse
     {
         $validated = $request->validated();
-        $this->fillMaterial($material, $validated);
+        $this->fillMaterial($material, $validated, $request);
         $material->save();
         $material->load('uploader');
 
@@ -240,9 +243,6 @@ class PortalController extends Controller
     public function destroyMaterial(Request $request, Material $material): JsonResponse
     {
         Gate::authorize('delete', $material);
-        if ($material->file_path) {
-            Storage::disk('public')->delete($material->file_path);
-        }
         $material->delete();
 
         return response()->json(['data' => ['message' => 'Materi berhasil dihapus.']]);
@@ -293,20 +293,41 @@ class PortalController extends Controller
         return response()->json(['data' => ['message' => 'Mahasiswa dikeluarkan dari mata kuliah.']]);
     }
 
-    private function fillMaterial(Material $material, array $validated): void
+    private function fillMaterial(Material $material, array $validated, ?Request $request = null): void
     {
         $material->title = $validated['title'];
         $material->description = $validated['description'] ?? '';
         $material->type = $validated['type'];
 
         if ($validated['type'] === 'file') {
-            $material->original_name = $validated['original_name'];
-            $material->file_size = $validated['file_size'];
-            $material->mime_type = $validated['mime_type'] ?? null;
+            if ($request && $request->hasFile('file')) {
+                $file = $request->file('file');
+                if ($material->file_path) {
+                    if (Storage::disk('local')->exists($material->file_path)) {
+                        Storage::disk('local')->delete($material->file_path);
+                    }
+                    if (Storage::disk('public')->exists($material->file_path)) {
+                        Storage::disk('public')->delete($material->file_path);
+                    }
+                }
+                $material->file_path = $file->store("materials/{$material->course_id}", 'local');
+                $material->original_name = $file->getClientOriginalName();
+                $material->file_size = $file->getSize();
+                $material->mime_type = $file->getMimeType();
+            } else {
+                $material->original_name = $validated['original_name'] ?? $material->original_name;
+                $material->file_size = $validated['file_size'] ?? $material->file_size;
+                $material->mime_type = $validated['mime_type'] ?? $material->mime_type;
+            }
             $material->external_url = null;
         } elseif ($validated['type'] === 'link') {
             if ($material->file_path) {
-                Storage::disk('public')->delete($material->file_path);
+                if (Storage::disk('local')->exists($material->file_path)) {
+                    Storage::disk('local')->delete($material->file_path);
+                }
+                if (Storage::disk('public')->exists($material->file_path)) {
+                    Storage::disk('public')->delete($material->file_path);
+                }
             }
             $material->external_url = $validated['external_url'];
             $material->file_path = null;
