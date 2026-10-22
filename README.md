@@ -12,6 +12,19 @@ Platform Learning Management System (LMS) berbasis **Laravel API** dan **Vue 3 S
 
 ---
 
+## 🔑 Akun Demo (Pengujian Lokal)
+Sesuai Bagian 4.4 Spesifikasi Proyek:
+
+| Peran | Email | Kata Sandi |
+|---|---|---|
+| **Admin** | `admin@kampuslms.test` | `password` |
+| **Dosen** | `dosen@kampuslms.test` | `password` |
+| **Mahasiswa** | `mahasiswa@kampuslms.test` | `password` |
+
+*(Akun demo terbuat secara otomatis saat menjalankan seeder `php artisan migrate --seed`)*
+
+---
+
 ## 💻 Cara Penggunaan Git & Repository
 
 ### 1. Initial Clone
