@@ -29,6 +29,9 @@ final class PrivateFiles
     public static function response(string $path, ?string $name = null, bool $preview = false): StreamedResponse
     {
         $disk = Storage::disk(self::DISK);
+        if (! ($path !== '' && $disk->exists($path)) && Storage::disk('public')->exists($path)) {
+            $disk = Storage::disk('public');
+        }
 
         abort_unless($path !== '' && $disk->exists($path), 404, 'Berkas tidak ditemukan.');
 
@@ -48,7 +51,7 @@ final class PrivateFiles
      * Jika tidak ada transaksi, dijalankan langsung. Jika transaksi di-rollback,
      * penghapusan dibatalkan sehingga baris dan berkas tetap konsisten.
      *
-     * @param iterable<int, string|null> $paths
+     * @param  iterable<int, string|null>  $paths
      */
     public static function deleteAfterCommit(iterable $paths): void
     {
