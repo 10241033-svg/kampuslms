@@ -9,7 +9,7 @@ const page = usePageData('submission-form');
 <template>
     <PageFrame title="Perbarui pengumpulan" :subtitle="page.data.value?.assignment?.title" :loading="page.loading.value" :error="page.error.value">
         <p v-if="page.data.value" class="current-file">File saat ini: <strong>{{ page.data.value.original_name }}</strong> · dikumpulkan {{ page.data.value.submitted_at ? new Date(page.data.value.submitted_at).toLocaleString('id-ID') : '—' }}</p>
-        <ResourceForm :fields="page.fields.value" :model="page.form" :busy="page.loading.value" :cancel-to="`/submissions/${page.data.value?.id}`" submit-label="Simpan pengumpulan" @submit="page.submit" @file-change="page.setFile" />
+        <ResourceForm :fields="page.fields.value" :model="page.form" :field-errors="page.fieldErrors" :busy="page.loading.value" :cancel-to="`/submissions/${page.data.value?.id}`" submit-label="Simpan pengumpulan" @submit="page.submit" @file-change="page.setFile" />
         <p class="hint">Biarkan kosong untuk tetap menggunakan file saat ini. Maksimum 10 MB.</p>
     </PageFrame>
 </template>
