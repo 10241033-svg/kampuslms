@@ -26,6 +26,11 @@ class SubmissionPolicy
             || ($user->role === 'mahasiswa' && $submission->user_id === $user->id);
     }
 
+    public function download(User $user, Submission $submission): bool
+    {
+        return $this->view($user, $submission);
+    }
+
     public function create(User $user, Assignment $assignment): bool
     {
         return $user->role === 'mahasiswa'
