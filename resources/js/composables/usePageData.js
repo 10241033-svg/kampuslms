@@ -267,7 +267,15 @@ export function usePageData(page) {
             if (page === 'submission-form') {
                 const body = new FormData();
                 body.append('note', form.note ?? '');
-                if (form.file instanceof File) body.append('file', form.file);
+                if (form.file instanceof File) {
+                    if (form.file.size > 5 * 1024 * 1024) {
+                        const sizeInMb = (form.file.size / (1024 * 1024)).toFixed(2);
+                        error.value = `Ukuran file tugas maksimal 5 MB. (Ukuran file yang dipilih: ${sizeInMb} MB)`;
+                        fieldErrors.file = error.value;
+                        return;
+                    }
+                    body.append('file', form.file);
+                }
                 const assignmentId = data.value.assignment_id || data.value.assignment?.id;
                 if (assignmentId) {
                     await api.post(`/assignments/${assignmentId}/submissions`, body);
@@ -293,6 +301,12 @@ export function usePageData(page) {
                 formData.append('type', form.type ?? 'file');
                 if (form.type === 'file') {
                     if (form.file instanceof File) {
+                        if (form.file.size > 20 * 1024 * 1024) {
+                            const sizeInMb = (form.file.size / (1024 * 1024)).toFixed(2);
+                            error.value = `Ukuran berkas materi maksimal 20 MB. (Ukuran file yang dipilih: ${sizeInMb} MB)`;
+                            fieldErrors.file = error.value;
+                            return;
+                        }
                         formData.append('file', form.file);
                     }
                 } else if (form.type === 'link') {
@@ -423,10 +437,25 @@ export function usePageData(page) {
     }
 
     async function submitAssignment(file, note) {
+        error.value = '';
         if (!file) {
             error.value = 'Pilih berkas pengumpulan terlebih dahulu.';
             return;
         }
+
+        if (file.size > 5 * 1024 * 1024) {
+            const sizeInMb = (file.size / (1024 * 1024)).toFixed(2);
+            error.value = `Ukuran file tugas maksimal 5 MB. (Ukuran file yang dipilih: ${sizeInMb} MB)`;
+            return;
+        }
+
+        const allowedExtensions = ['pdf', 'doc', 'docx'];
+        const ext = file.name.split('.').pop()?.toLowerCase();
+        if (!allowedExtensions.includes(ext)) {
+            error.value = 'Format file tugas harus berupa PDF, DOC, atau DOCX.';
+            return;
+        }
+
         const body = new FormData();
         body.append('file', file);
         body.append('note', note ?? '');
