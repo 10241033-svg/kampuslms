@@ -20,7 +20,11 @@ const note = ref('');
             <div v-if="page.user.value?.role === 'mahasiswa' && page.data.value.submission" class="notice">
                 <h2>Status Pengumpulan</h2>
                 <div class="submission-summary">
-                    <span class="pill" :class="{ late: page.data.value.submission.is_late }">{{ page.data.value.submission.is_late ? 'Terlambat' : 'Terkumpul Tepat Waktu' }}</span>
+                    <div class="status-pills">
+                        <span class="pill" :class="{ late: page.data.value.submission.is_late }">{{ page.data.value.submission.is_late ? 'Terlambat' : 'Terkumpul Tepat Waktu' }}</span>
+                        <span v-if="page.data.value.submission.is_graded || page.data.value.submission.grade" class="pill pill-graded">Sudah Dinilai</span>
+                        <span v-else class="pill pill-waiting">Menunggu Penilaian</span>
+                    </div>
                     <p>Berkas: <strong>{{ page.data.value.submission.original_name }}</strong> ({{ page.data.value.submission.file_size_formatted || (Math.ceil((page.data.value.submission.file_size ?? 0) / 1024) + ' KB') }})</p>
                     <p>Waktu pengumpulan: {{ page.data.value.submission.submitted_at ? new Date(page.data.value.submission.submitted_at).toLocaleString('id-ID') : '—' }}</p>
                 </div>
@@ -29,7 +33,11 @@ const note = ref('');
                     <RouterLink class="button" :to="`/submissions/${page.data.value.submission.id}`">Lihat Detail Pengumpulan</RouterLink>
                 </div>
 
-                <details class="resubmit-box">
+                <div v-if="page.data.value.submission.is_graded || page.data.value.submission.grade" class="graded-notice">
+                    <p>🔒 <strong>Tugas sudah dinilai.</strong> Pengumpulan ini sudah dinilai oleh dosen sehingga tidak dapat diubah atau dikumpulkan ulang.</p>
+                </div>
+
+                <details v-else class="resubmit-box">
                     <summary class="button button-quiet">Kumpulkan Ulang / Revisi Tugas</summary>
                     <form class="submit-form" @submit.prevent="page.submitAssignment(file, note)">
                         <p v-if="page.error.value" class="error-msg" role="alert">{{ page.error.value }}</p>
@@ -71,4 +79,9 @@ const note = ref('');
 .resubmit-box summary { cursor: pointer; list-style: none; display: inline-block; }
 .actions { display:flex; flex-wrap:wrap; gap:10px; margin:12px 0; }
 .error-msg { width:100%; padding:10px 14px; border-radius:8px; background:#fef2f2; border:1px solid #fecaca; color:#991b1b; font-size:0.9rem; font-weight:500; margin:4px 0 10px; }
+.status-pills { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.pill.pill-graded { background: #e0f2fe; color: #0284c7; font-weight: 600; }
+.pill.pill-waiting { background: #fef3c7; color: #b45309; }
+.graded-notice { margin-top: 16px; padding: 14px 18px; border-radius: 10px; background: #f0fdf4; border: 1px solid #bbf7d0; color: #15803d; font-size: 0.95rem; }
+.graded-notice p { margin: 0; }
 </style>

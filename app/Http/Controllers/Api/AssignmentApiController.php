@@ -84,6 +84,10 @@ class AssignmentApiController extends Controller
             ->where('user_id', $request->user()->id)
             ->first();
 
+        if ($existing && $existing->grade()->exists()) {
+            abort(403, 'Tugas sudah dinilai dan tidak dapat diubah lagi.');
+        }
+
         if ($existing && $existing->file_path && Storage::disk('local')->exists($existing->file_path)) {
             Storage::disk('local')->delete($existing->file_path);
         }

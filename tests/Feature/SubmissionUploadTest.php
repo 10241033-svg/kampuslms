@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Assignment;
 use App\Models\Course;
+use App\Models\Grade;
 use App\Models\Material;
 use App\Models\Submission;
 use App\Models\User;
@@ -244,4 +245,62 @@ class SubmissionUploadTest extends TestCase
         $this->deleteJson("/api/v1/materials/{$materialId}")->assertOk();
         Storage::disk('local')->assertMissing($material->file_path);
     }
+
+    public function test_student_cannot_edit_or_resubmit_after_submission_is_graded(): void
+    {
+        Storage::fake('local');
+
+        $lecturer = User::factory()->dosen()->create();
+        $student = User::factory()->create();
+        $course = Course::factory()->create(['lecturer_id' => $lecturer->id, 'status' => 'active']);
+        $course->students()->attach($student->id, ['enrolled_at' => now()]);
+
+        $assignment = Assignment::factory()->create([
+            'course_id' => $course->id,
+            'status' => 'published',
+            'due_at' => now()->addDays(2),
+            'allow_late' => true,
+        ]);
+
+        // 1. Mahasiswa mengumpulkan tugas
+        $this->actingAs($student, 'sanctum')
+            ->post("/api/v1/assignments/{$assignment->id}/submissions", [
+                'file' => UploadedFile::fake()->create('jawaban_awal.pdf', 100, 'application/pdf'),
+                'note' => 'Versi pertama',
+            ], ['Accept' => 'application/json'])
+            ->assertCreated();
+
+        $submission = Submission::where('assignment_id', $assignment->id)->where('user_id', $student->id)->firstOrFail();
+        $originalFilePath = $submission->file_path;
+        Storage::disk('local')->assertExists($originalFilePath);
+
+        // 2. Dosen memberi nilai
+        Grade::create([
+            'submission_id' => $submission->id,
+            'graded_by' => $lecturer->id,
+            'score' => 88.5,
+            'feedback' => 'Sudah bagus.',
+            'graded_at' => now(),
+        ]);
+
+        // 3. Mahasiswa mencoba kumpulkan ulang / revisi -> DITOLAK (403 Forbidden)
+        $this->actingAs($student, 'sanctum')
+            ->post("/api/v1/assignments/{$assignment->id}/submissions", [
+                'file' => UploadedFile::fake()->create('revisi_setelah_nilai.pdf', 100, 'application/pdf'),
+                'note' => 'Mencoba ganti berkas',
+            ], ['Accept' => 'application/json'])
+            ->assertForbidden();
+
+        // 4. Mahasiswa mencoba mengupdate melalui PUT /submissions/{id} -> DITOLAK (403 Forbidden)
+        $this->actingAs($student, 'sanctum')
+            ->putJson("/api/v1/submissions/{$submission->id}", [
+                'note' => 'Catatan diubah',
+            ])
+            ->assertForbidden();
+
+        // 5. Pastikan berkas lama tidak terhapus atau tertimpa
+        Storage::disk('local')->assertExists($originalFilePath);
+        $this->assertEquals('jawaban_awal.pdf', $submission->fresh()->original_name);
+    }
 }
+

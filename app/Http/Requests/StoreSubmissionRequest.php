@@ -14,8 +14,20 @@ class StoreSubmissionRequest extends FormRequest
     {
         $assignment = $this->route('assignment');
 
-        return $assignment instanceof Assignment
-            && Gate::allows('create', [Submission::class, $assignment]);
+        if (! $assignment instanceof Assignment
+            || ! Gate::allows('create', [Submission::class, $assignment])) {
+            return false;
+        }
+
+        $existing = Submission::where('assignment_id', $assignment->id)
+            ->where('user_id', $this->user()?->id)
+            ->first();
+
+        if ($existing && $existing->grade()->exists()) {
+            return false;
+        }
+
+        return true;
     }
 
     public function rules(): array

@@ -45,7 +45,8 @@ class SubmissionPolicy
             && $submission->user_id === $user->id
             && $submission->assignment->status === 'published'
             && $submission->assignment->course->status === 'active'
-            && $submission->assignment->course->students()->whereKey($user->id)->exists();
+            && $submission->assignment->course->students()->whereKey($user->id)->exists()
+            && ! $submission->grade()->exists();
     }
 
     public function delete(User $user, Submission $submission): bool
