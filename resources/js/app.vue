@@ -9,6 +9,7 @@
                 <RouterLink v-if="user.role === 'admin'" to="/users">Pengguna</RouterLink>
                 <RouterLink v-if="user.role === 'mahasiswa'" to="/my/submissions">Pengumpulan saya</RouterLink>
                 <RouterLink to="/notifications">Notifikasi</RouterLink>
+                <RouterLink to="/settings">Pengaturan</RouterLink>
                 <button class="button button-quiet" type="button" @click="logout">Keluar</button>
             </nav>
         </header>
