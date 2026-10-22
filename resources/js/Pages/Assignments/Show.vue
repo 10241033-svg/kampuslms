@@ -32,6 +32,7 @@ const note = ref('');
                 <details class="resubmit-box">
                     <summary class="button button-quiet">Kumpulkan Ulang / Revisi Tugas</summary>
                     <form class="submit-form" @submit.prevent="page.submitAssignment(file, note)">
+                        <p v-if="page.error.value" class="error-msg" role="alert">{{ page.error.value }}</p>
                         <label for="resubmission-file">Pilih Berkas Revisi (PDF, DOC, DOCX maks. 5 MB)</label>
                         <input id="resubmission-file" type="file" accept=".pdf,.doc,.docx" required @change="file = $event.target.files?.[0] ?? null">
                         <label for="resubmission-note">Catatan Tambahan untuk Dosen</label>
@@ -42,6 +43,7 @@ const note = ref('');
             </div>
             <form v-else-if="page.user.value?.role === 'mahasiswa' && page.data.value.status === 'published'" class="submit-form" @submit.prevent="page.submitAssignment(file, note)">
                 <h2>Kumpulkan tugas</h2>
+                <p v-if="page.error.value" class="error-msg" role="alert">{{ page.error.value }}</p>
                 <label for="submission-file">Berkas (PDF, DOC, DOCX maks. 5 MB)</label>
                 <input id="submission-file" type="file" accept=".pdf,.doc,.docx" required @change="file = $event.target.files?.[0] ?? null">
                 <label for="submission-note">Catatan untuk dosen</label>
@@ -68,4 +70,5 @@ const note = ref('');
 .resubmit-box { margin-top: 16px; padding-top: 12px; border-top: 1px dashed #d8d4e2; }
 .resubmit-box summary { cursor: pointer; list-style: none; display: inline-block; }
 .actions { display:flex; flex-wrap:wrap; gap:10px; margin:12px 0; }
+.error-msg { width:100%; padding:10px 14px; border-radius:8px; background:#fef2f2; border:1px solid #fecaca; color:#991b1b; font-size:0.9rem; font-weight:500; margin:4px 0 10px; }
 </style>
