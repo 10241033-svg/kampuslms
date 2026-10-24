@@ -71,7 +71,7 @@ class AssignmentApiController extends Controller
         Gate::authorize('viewAny', [Submission::class, $assignment]);
 
         $submissions = $assignment->submissions()
-            ->with(['student', 'grade.grader'])
+            ->with(['assignment.course', 'student', 'grade.grader'])
             ->latest('submitted_at')
             ->paginate(15);
 
