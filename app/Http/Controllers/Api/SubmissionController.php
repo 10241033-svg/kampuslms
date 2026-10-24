@@ -11,10 +11,12 @@ use App\Http\Resources\SubmissionResource;
 use App\Models\Grade;
 use App\Models\Submission;
 use App\Models\SubmissionAccessLog;
+use App\Notifications\GradePublishedNotification;
 use App\Support\ApiResponse;
 use App\Support\PrivateFiles;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 
@@ -110,8 +112,23 @@ class SubmissionController extends Controller
     {
         $grade->load('submission.assignment.course');
         Gate::authorize('publish', $grade);
-        $grade->published_at = now();
-        $grade->save();
+
+        $grade = DB::transaction(function () use ($grade) {
+            $grade = Grade::query()
+                ->whereKey($grade->getKey())
+                ->lockForUpdate()
+                ->with(['submission.student', 'submission.assignment.course'])
+                ->firstOrFail();
+
+            if ($grade->published_at === null) {
+                $grade->published_at = now();
+                $grade->save();
+
+                $grade->submission->student?->notify(new GradePublishedNotification($grade));
+            }
+
+            return $grade;
+        });
 
         return new GradeResource($grade->load('grader'));
     }

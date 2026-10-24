@@ -561,6 +561,11 @@ curl "$API/notifications?page=1" -H "Accept: application/json" \
 
 **Gagal `401`:** `{"message":"Unauthenticated."}`.
 
+Notifikasi publikasi nilai menggunakan `type` `App\\Notifications\\GradePublishedNotification`.
+Field `data` mencakup `title`, `judul`, `grade_id`, identitas dan judul tugas,
+identitas dan nama mata kuliah, serta pesan publikasi. Notifikasi tidak memuat
+URL yang tidak tersedia di UI, skor, atau feedback.
+
 ### Tandai notifikasi sudah dibaca
 
 **Method / URI:** `POST /api/v1/notifications/{notification}/read`  

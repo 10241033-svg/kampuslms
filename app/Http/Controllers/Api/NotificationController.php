@@ -42,7 +42,8 @@ class NotificationController extends Controller
 
         // Validasi kepemilikan: ID penerima harus cocok dengan ID user yang sedang login
         abort_if(
-            (string) $notification->notifiable_id !== (string) auth()->id(),
+            (string) $notification->notifiable_id !== (string) $request->user()->getKey()
+                || $notification->notifiable_type !== $request->user()->getMorphClass(),
             403,
             'Anda tidak memiliki akses ke notifikasi ini.'
         );
@@ -61,7 +62,8 @@ class NotificationController extends Controller
 
         // Validasi kepemilikan: ID penerima harus cocok dengan ID user yang sedang login
         abort_if(
-            (string) $notification->notifiable_id !== (string) auth()->id(),
+            (string) $notification->notifiable_id !== (string) $request->user()->getKey()
+                || $notification->notifiable_type !== $request->user()->getMorphClass(),
             403,
             'Anda tidak memiliki akses ke notifikasi ini.'
         );
@@ -87,4 +89,3 @@ class NotificationController extends Controller
         ]);
     }
 }
-
