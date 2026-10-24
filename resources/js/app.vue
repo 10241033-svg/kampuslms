@@ -8,7 +8,11 @@
                 <RouterLink v-if="user.role === 'admin'"to="/courses">Mata kuliah</RouterLink>
                 <RouterLink v-if="user.role === 'admin'" to="/users">Pengguna</RouterLink>
                 <RouterLink v-if="user.role === 'mahasiswa'" to="/my/submissions">Pengumpulan saya</RouterLink>
+<<<<<<< Updated upstream
                 <RouterLink to="/notifications">Notifikasi</RouterLink>
+=======
+                <RouterLink v-if="user.role === 'mahasiswa'" to="/my/grade-summary">Rekap nilai</RouterLink>
+>>>>>>> Stashed changes
                 <RouterLink to="/settings">Pengaturan</RouterLink>
                 <button class="button button-quiet" type="button" @click="logout">Keluar</button>
             </nav>
