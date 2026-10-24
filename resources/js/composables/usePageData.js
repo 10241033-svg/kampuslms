@@ -202,6 +202,20 @@ export function usePageData(page) {
                     rows.value = array(response);
                     pagination.value = response.data.meta;
                     break;
+                case 'grade-summary':
+                    if (user.value.role === 'mahasiswa') {
+                        response = await api.get('/my/grade-summary', { params: { page: currentPage.value } });
+                    } else {
+                        const [courseResponse, summaryResponse] = await Promise.all([
+                            api.get(`/courses/${id}`),
+                            api.get(`/courses/${id}/grade-summary`, { params: { page: currentPage.value } }),
+                        ]);
+                        data.value = courseResponse.data.data;
+                        response = summaryResponse;
+                    }
+                    rows.value = array(response);
+                    pagination.value = response.data.meta;
+                    break;
                 case 'my-submissions':
                     response = await api.get('/my/submissions', { params: { page: currentPage.value } });
                     rows.value = array(response);

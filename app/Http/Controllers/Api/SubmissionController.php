@@ -123,8 +123,7 @@ class SubmissionController extends Controller
             if ($grade->published_at === null) {
                 $grade->published_at = now();
                 $grade->save();
-
-                $grade->submission->student?->notify(new GradePublishedNotification($grade));
+                $grade->submission->student->notify(new GradePublishedNotification($grade));
             }
 
             return $grade;
