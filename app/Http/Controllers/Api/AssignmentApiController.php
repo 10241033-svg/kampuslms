@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Events\AssignmentPublished;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreAssignmentRequest;
 use App\Http\Requests\StoreSubmissionRequest;
@@ -39,6 +40,8 @@ class AssignmentApiController extends Controller
         $this->applyAssignmentInput($assignment, $validated);
         $assignment->save();
 
+        AssignmentPublished::dispatch($assignment);
+
         return (new AssignmentResource($assignment))->response()->setStatusCode(201);
     }
 
@@ -68,7 +71,7 @@ class AssignmentApiController extends Controller
         Gate::authorize('viewAny', [Submission::class, $assignment]);
 
         $submissions = $assignment->submissions()
-            ->with(['student', 'grade.grader'])
+            ->with(['assignment.course', 'student', 'grade.grader'])
             ->latest('submitted_at')
             ->paginate(15);
 
