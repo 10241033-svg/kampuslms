@@ -37,8 +37,10 @@ Route::prefix('v1')->name('api.v1.')->middleware('throttle:60,1')->group(functio
         // Notifikasi
         Route::prefix('notifications')->name('notifications.')->group(function () {
             Route::get('/', [NotificationController::class, 'index'])->name('index');
-            Route::post('/{notification}/read', [NotificationController::class, 'read'])->name('read');
+            Route::get('/unread-count', [NotificationController::class, 'unreadCount'])->name('unread-count');
             Route::post('/read-all', [NotificationController::class, 'readAll'])->name('read-all');
+            Route::get('/{notification}', [NotificationController::class, 'show'])->name('show');
+            Route::post('/{notification}/read', [NotificationController::class, 'read'])->name('read');
         });
 
         // ── Grup Rute: Admin ─────────────────────────────────────────────────
