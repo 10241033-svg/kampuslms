@@ -9,42 +9,39 @@ use Illuminate\Support\Facades\Gate;
 
 class StoreGradeRequest extends FormRequest
 {
-    public function authorize(): bool
-    {
-        $submission = $this->route('submission');
-        if (! $submission instanceof Submission) {
-            return false;
-        }
+	public function authorize(): bool
+	{
+		$submission = $this->route('submission');
 
-        $grade = $submission->grade;
+		if (! $submission instanceof Submission) {
+			return false;
+		}
 
-        return Gate::allows($grade ? 'update' : 'create', $grade ?? [Grade::class, $submission]);
-    }
+		$submission->loadMissing(['assignment.course', 'grade']);
+		$grade = $submission->grade;
 
-    public function rules(): array
-    {
-        $submission = $this->route('submission');
-        if ($submission instanceof Submission) {
-            $submission->loadMissing('assignment');
-            $maxScore = $submission->assignment?->max_score ?? 100;
-        } else {
-            $maxScore = 100;
-        }
+		return Gate::allows($grade ? 'update' : 'create', $grade ?? [Grade::class, $submission]);
+	}
 
-        return [
-            'score' => ['required', 'numeric', 'min:0', "max:{$maxScore}"],
-            'feedback' => ['nullable', 'string'],
-        ];
-    }
+	public function rules(): array
+	{
+		$submission = $this->route('submission');
+		$maxScore = $submission->assignment->max_score;
 
-    public function messages(): array
-    {
-        return [
-            'score.required' => 'Nilai wajib diisi.',
-            'score.numeric' => 'Nilai harus berupa angka.',
-            'score.min' => 'Nilai tidak boleh kurang dari 0.',
-            'score.max' => 'Nilai tidak boleh melebihi nilai maksimum tugas.',
-            'feedback.string' => 'Feedback harus berupa teks.',
-        ];
-    }
+		return [
+			'score' => ['required', 'numeric', 'min:0', "max:{$maxScore}"],
+			'feedback' => ['nullable', 'string'],
+		];
+	}
+
+	public function messages(): array
+	{
+		return [
+			'score.required' => 'Nilai wajib diisi.',
+			'score.numeric' => 'Nilai harus berupa angka.',
+			'score.min' => 'Nilai tidak boleh kurang dari 0.',
+			'score.max' => 'Nilai tidak boleh melebihi nilai maksimum tugas.',
+			'feedback.string' => 'Feedback harus berupa teks.',
+		];
+	}
 }
