@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreGradeRequest;
-use App\Http\Requests\UpdateGradeRequest;
+use App\Http\Requests\UpdateGradeRequest as GradeUpdateRequest;
 use App\Http\Requests\UpdateSubmissionRequest;
 use App\Http\Resources\GradeResource;
 use App\Http\Resources\SubmissionResource;
@@ -132,7 +132,7 @@ class SubmissionController extends Controller
         return new GradeResource($grade->load('grader'));
     }
 
-    public function updateGrade(UpdateGradeRequest $request, Grade $grade): JsonResponse
+    public function updateGrade(GradeUpdateRequest $request, Grade $grade): JsonResponse
     {
         $grade->load(['submission.assignment.course']);
         Gate::authorize('update', $grade);
