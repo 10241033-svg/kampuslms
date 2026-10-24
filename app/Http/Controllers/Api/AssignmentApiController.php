@@ -88,8 +88,10 @@ class AssignmentApiController extends Controller
             abort(403, 'Tugas sudah dinilai dan tidak dapat diubah lagi.');
         }
 
-        if ($existing && $existing->file_path && Storage::disk('local')->exists($existing->file_path)) {
-            Storage::disk('local')->delete($existing->file_path);
+        $oldPath = $existing?->file_path;
+
+        if ($oldpath) {
+            Storage::disk('local')->delete($oldPath);
         }
 
         $submission = Submission::updateOrCreate(
@@ -111,7 +113,7 @@ class AssignmentApiController extends Controller
 
         return (new SubmissionResource($submission))
             ->response()->setStatusCode($submission->wasRecentlyCreated ? 201 : 200);
-    }
+    } 
 
     private function applyAssignmentInput(Assignment $assignment, array $validated): void
     {
