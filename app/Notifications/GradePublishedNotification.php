@@ -7,18 +7,13 @@ use Illuminate\Notifications\Notification;
 
 class GradePublishedNotification extends Notification
 {
-    public function __construct(public Grade $grade)
-    {
-    }
+    public function __construct(public Grade $grade) {}
 
     public function via(object $notifiable): array
     {
         return ['database'];
     }
 
-    /**
-     * @return array<string, int|string>
-     */
     public function toArray(object $notifiable): array
     {
         $submission = $this->grade->submission;
@@ -26,17 +21,18 @@ class GradePublishedNotification extends Notification
         $course = $assignment->course;
 
         return [
-            'title' => 'Nilai tugas tersedia',
+            'title' => 'Nilai tugas dipublikasikan',
+            'judul' => 'Nilai tugas dipublikasikan',
+            'grade_id' => $this->grade->id,
             'message' => "Nilai untuk tugas {$assignment->title} pada mata kuliah {$course->name} telah dipublikasikan.",
             'assignment_id' => $assignment->id,
+            'assignment_title' => $assignment->title,
             'course_id' => $course->id,
+            'course_name' => $course->name,
             'url' => url('/submissions/'.$submission->id.'/grade'),
         ];
     }
 
-    /**
-     * @return array<string, int|string>
-     */
     public function toDatabase(object $notifiable): array
     {
         return $this->toArray($notifiable);

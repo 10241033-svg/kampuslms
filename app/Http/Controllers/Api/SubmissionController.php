@@ -115,11 +115,10 @@ class SubmissionController extends Controller
 
         $grade = DB::transaction(function () use ($grade) {
             $grade = Grade::query()
-                ->with(['submission.student', 'submission.assignment.course'])
+                ->whereKey($grade->getKey())
                 ->lockForUpdate()
-                ->findOrFail($grade->id);
-
-            Gate::authorize('publish', $grade);
+                ->with(['submission.student', 'submission.assignment.course'])
+                ->firstOrFail();
 
             if ($grade->published_at === null) {
                 $grade->published_at = now();
@@ -133,7 +132,8 @@ class SubmissionController extends Controller
         return new GradeResource($grade->load('grader'));
     }
 
-    public function updateGrade(UpdateGradeRequest $request, Grade $grade): JsonResponse
+    // @php-cs-fixer-ignore fully_qualified_strict_types
+    public function updateGrade(\App\Http\Requests\UpdateGradeRequest $request, Grade $grade): JsonResponse
     {
         $grade->load(['submission.assignment.course']);
         Gate::authorize('update', $grade);

@@ -33,7 +33,7 @@ class GradeSummaryNotificationTest extends TestCase
         $this->assertSame(0, $outsider->notifications()->count());
         $notification = $student->notifications()->firstOrFail();
         $this->assertSame(GradePublishedNotification::class, $notification->type);
-        $this->assertSame('Nilai tugas tersedia', $notification->data['title']);
+        $this->assertSame('Nilai tugas dipublikasikan', $notification->data['title']);
         $this->assertStringContainsString($assignment->title, $notification->data['message']);
         $this->assertStringContainsString($course->name, $notification->data['message']);
         $this->assertSame('/submissions/'.$submission->id.'/grade', parse_url($notification->data['url'], PHP_URL_PATH));
