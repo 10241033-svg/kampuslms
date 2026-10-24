@@ -78,41 +78,51 @@ class AssignmentApiController extends Controller
     public function submit(StoreSubmissionRequest $request, Assignment $assignment)
     {
         $validated = $request->validated();
-        $file = $request->file('file');
+        $user = $request->user();
 
         $existing = Submission::where('assignment_id', $assignment->id)
-            ->where('user_id', $request->user()->id)
+            ->where('user_id', $user->id)
             ->first();
 
         if ($existing && $existing->grade()->exists()) {
             abort(403, 'Tugas sudah dinilai dan tidak dapat diubah lagi.');
         }
 
-        if ($existing && $existing->file_path && Storage::disk('local')->exists($existing->file_path)) {
-            Storage::disk('local')->delete($existing->file_path);
+        // Siapkan data yang akan disimpan (selain file)
+        $dataToUpdate = [
+            'note' => $validated['note'] ?? null,
+            'submitted_at' => now(),
+            'is_late' => now()->greaterThan($assignment->due_at),
+        ];
+
+        // Cek apakah ada file baru yang diunggah
+        if ($request->hasFile('file')) {
+            $file = $request->file('file');
+            
+            // Hapus file lama hanya JIKA file baru berhasil diunggah
+            if ($existing?->file_path) {
+                Storage::disk('local')->delete($existing->file_path);
+            }
+
+            $dataToUpdate['file_path'] = $file->store("submissions/{$assignment->id}", 'local');
+            $dataToUpdate['original_name'] = $file->getClientOriginalName();
+            $dataToUpdate['file_size'] = $file->getSize();
         }
 
         $submission = Submission::updateOrCreate(
             [
                 'assignment_id' => $assignment->id,
-                'user_id' => $request->user()->id,
+                'user_id' => $user->id,
             ],
-            [
-                'file_path' => $file->store("submissions/{$assignment->id}", 'local'),
-                'original_name' => $file->getClientOriginalName(),
-                'file_size' => $file->getSize(),
-                'note' => $validated['note'] ?? null,
-                'submitted_at' => now(),
-                'is_late' => now()->greaterThan($assignment->due_at),
-            ]
+            $dataToUpdate
         );
 
         $submission->load(['student', 'grade.grader']);
 
         return (new SubmissionResource($submission))
-            ->response()->setStatusCode($submission->wasRecentlyCreated ? 201 : 200);
+            ->response()
+            ->setStatusCode($submission->wasRecentlyCreated ? 201 : 200);
     }
-
     private function applyAssignmentInput(Assignment $assignment, array $validated): void
     {
         foreach (['title', 'instructions', 'due_at', 'max_score', 'status'] as $field) {
