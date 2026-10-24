@@ -388,6 +388,7 @@ export function usePageData(page) {
     async function readNotification(notification) {
         try {
             await api.post(`/notifications/${notification.id}/read`);
+            window.dispatchEvent(new CustomEvent('notifications-updated'));
             await load();
         } catch (requestError) {
             error.value = getErrorMessage(requestError);
@@ -397,6 +398,7 @@ export function usePageData(page) {
     async function readAllNotifications() {
         try {
             await api.post('/notifications/read-all');
+            window.dispatchEvent(new CustomEvent('notifications-updated'));
             await load();
         } catch (requestError) {
             error.value = getErrorMessage(requestError);
