@@ -20,6 +20,8 @@ class SubmissionPolicy
 
     public function view(User $user, Submission $submission): bool
     {
+        $submission->loadMissing('assignment.course');
+
         return $user->role === 'admin'
             || ($user->role === 'dosen'
                 && $submission->assignment->course->lecturer_id === $user->id)
@@ -41,6 +43,8 @@ class SubmissionPolicy
 
     public function update(User $user, Submission $submission): bool
     {
+        $submission->loadMissing('assignment.course');
+
         return $user->role === 'mahasiswa'
             && $submission->user_id === $user->id
             && $submission->assignment->status === 'published'
@@ -51,6 +55,8 @@ class SubmissionPolicy
 
     public function delete(User $user, Submission $submission): bool
     {
+        $submission->loadMissing('assignment.course');
+
         return $user->role === 'admin'
             || ($user->role === 'dosen'
                 && $submission->assignment->course->lecturer_id === $user->id);
