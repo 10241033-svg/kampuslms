@@ -54,7 +54,6 @@ class GradeSummaryNotificationTest extends TestCase
         $ownPublished = $this->createGradeFor($course, $lecturer, $student, true);
         $this->createGradeFor($course, $lecturer, $student, false);
         $this->createGradeFor($course, $lecturer, $otherStudent, true);
-        $course->students()->detach($student->id);
 
         $this->getJson('/api/v1/courses/'.$course->id.'/grade-summary')
             ->assertUnauthorized();
