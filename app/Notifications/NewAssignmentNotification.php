@@ -2,21 +2,20 @@
 
 namespace App\Notifications;
 
+use App\Models\Assignment;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class NewAssignmentNotification extends Notification
+class NewAssignmentNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
     /**
      * Create a new notification instance.
      */
-    public function __construct()
+    public function __construct(public Assignment $assignment)
     {
-        //
     }
 
     /**
@@ -26,18 +25,7 @@ class NewAssignmentNotification extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['mail'];
-    }
-
-    /**
-     * Get the mail representation of the notification.
-     */
-    public function toMail(object $notifiable): MailMessage
-    {
-        return (new MailMessage)
-            ->line('The introduction to the notification.')
-            ->action('Notification Action', url('/'))
-            ->line('Thank you for using our application!');
+        return ['database'];
     }
 
     /**
@@ -47,8 +35,31 @@ class NewAssignmentNotification extends Notification
      */
     public function toArray(object $notifiable): array
     {
+        $courseName = $this->assignment->course?->name ?? $this->assignment->course?->title ?? '';
+        $dueDate = $this->assignment->due_at?->toIso8601String() ?? (string) $this->assignment->due_at;
+
         return [
-            //
+            'assignment_id' => $this->assignment->id,
+            'id' => $this->assignment->id,
+            'title' => $this->assignment->title,
+            'judul' => $this->assignment->title,
+            'course_name' => $courseName,
+            'nama_mata_kuliah' => $courseName,
+            'due_date' => $dueDate,
+            'due_at' => $dueDate,
+            'message' => "Tugas baru: {$this->assignment->title} telah dipublikasikan.",
+            'pesan' => "Tugas baru: {$this->assignment->title} telah dipublikasikan.",
+            'url' => url('/assignments/' . $this->assignment->id),
         ];
+    }
+
+    /**
+     * Get the database representation of the notification.
+     *
+     * @return array<string, mixed>
+     */
+    public function toDatabase(object $notifiable): array
+    {
+        return $this->toArray($notifiable);
     }
 }

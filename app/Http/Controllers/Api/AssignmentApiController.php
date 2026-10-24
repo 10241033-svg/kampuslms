@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Events\AssignmentPublished;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreAssignmentRequest;
 use App\Http\Requests\StoreSubmissionRequest;
@@ -38,6 +39,8 @@ class AssignmentApiController extends Controller
         $assignment->created_by = $request->user()->id;
         $this->applyAssignmentInput($assignment, $validated);
         $assignment->save();
+
+        AssignmentPublished::dispatch($assignment);
 
         return (new AssignmentResource($assignment))->response()->setStatusCode(201);
     }
