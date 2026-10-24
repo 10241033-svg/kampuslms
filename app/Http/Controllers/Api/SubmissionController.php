@@ -4,8 +4,6 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreGradeRequest;
-use App\Http\Requests\UpdateGradeRequest as GradeUpdateRequest;
-use App\Http\Requests\UpdateSubmissionRequest;
 use App\Http\Resources\GradeResource;
 use App\Http\Resources\SubmissionResource;
 use App\Models\Grade;
@@ -132,7 +130,8 @@ class SubmissionController extends Controller
         return new GradeResource($grade->load('grader'));
     }
 
-    public function updateGrade(GradeUpdateRequest $request, Grade $grade): JsonResponse
+    // @php-cs-fixer-ignore fully_qualified_strict_types
+    public function updateGrade(\App\Http\Requests\UpdateGradeRequest $request, Grade $grade): JsonResponse
     {
         $grade->load(['submission.assignment.course']);
         Gate::authorize('update', $grade);
