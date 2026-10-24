@@ -7,9 +7,7 @@ use Illuminate\Notifications\Notification;
 
 class GradePublishedNotification extends Notification
 {
-    public function __construct(public Grade $grade)
-    {
-    }
+    public function __construct(public Grade $grade) {}
 
     public function via(object $notifiable): array
     {
@@ -31,6 +29,7 @@ class GradePublishedNotification extends Notification
             'course_id' => $course->id,
             'course_name' => $course->name,
             'message' => "Nilai untuk tugas {$assignment->title} di mata kuliah {$course->name} telah dipublikasikan.",
+            'url' => url('/submissions/'.$submission->id.'/grade'),
         ];
     }
 

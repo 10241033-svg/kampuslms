@@ -55,12 +55,12 @@ class GradePublishedNotificationTest extends TestCase
         $this->assertSame($assignment->title, $notification->data['assignment_title']);
         $this->assertSame($course->id, $notification->data['course_id']);
         $this->assertSame($course->name, $notification->data['course_name']);
+        $this->assertSame(url('/submissions/'.$submission->id.'/grade'), $notification->data['url']);
         $this->assertSame('Nilai tugas dipublikasikan', $notification->data['title']);
         $this->assertSame($notification->data['title'], $notification->data['judul']);
         $this->assertStringContainsString('telah dipublikasikan', $notification->data['message']);
         $this->assertArrayNotHasKey('score', $notification->data);
         $this->assertArrayNotHasKey('feedback', $notification->data);
-        $this->assertArrayNotHasKey('url', $notification->data);
 
         $this->actingAs($student, 'sanctum')
             ->getJson('/api/v1/notifications?per_page=5')
@@ -73,6 +73,13 @@ class GradePublishedNotificationTest extends TestCase
         $this->getJson('/api/v1/notifications/unread-count')
             ->assertOk()
             ->assertJsonPath('data.unread_count', 1);
+
+        $this->postJson('/api/v1/notifications/'.$notification->id.'/read')
+            ->assertOk()
+            ->assertJsonPath('data.read_at', fn ($value) => $value !== null);
+        $this->getJson('/api/v1/notifications/unread-count')
+            ->assertOk()
+            ->assertJsonPath('data.unread_count', 0);
 
         $publishedAt = $grade->fresh()->published_at;
         $this->actingAs($lecturer, 'sanctum');

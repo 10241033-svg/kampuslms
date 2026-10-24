@@ -405,6 +405,21 @@ export function usePageData(page) {
         }
     }
 
+    async function publishGrade() {
+        if (!data.value?.grade?.id) return;
+
+        loading.value = true;
+        error.value = '';
+        try {
+            await api.post(`/grades/${data.value.grade.id}/publish`);
+            await load();
+        } catch (requestError) {
+            error.value = getErrorMessage(requestError);
+        } finally {
+            loading.value = false;
+        }
+    }
+
     async function download(url, filename) {
         try {
             const response = await api.get(url, { responseType: 'blob' });
@@ -487,7 +502,7 @@ export function usePageData(page) {
     return {
         user, data, rows, lecturers, candidates, loading, error, fieldErrors, search, status, role,
         currentPage, pagination, form, fields, mode, router, load, submit, login,
-        remove, enroll, removeStudent, readNotification, readAllNotifications,
+        remove, enroll, removeStudent, readNotification, readAllNotifications, publishGrade,
         download, preview, submitAssignment, goToPage, setFile,
     };
 }
